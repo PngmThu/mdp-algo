@@ -42,4 +42,4 @@ GRID_WIDTH = 30
 # 2: start & goal zone (green)
 # 3: robot (yellow)
 # 4: facing direction of robot (orange)
-colors = ['white', 'blue', 'green', 'yellow', 'orange', 'pink']
+colors = ['white', 'blue', 'green', 'yellow', 'orange', 'pink', 'grey']

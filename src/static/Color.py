@@ -9,3 +9,4 @@ class Color(enum.Enum):
     ROBOT = 3
     FACING = 4
     WAYPOINT = 5
+    UNEXPLORED = 6

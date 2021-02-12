@@ -3,6 +3,7 @@ import os
 from src.algorithms.Exploration import Exploration
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
+from src.static.Color import Color
 from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL
 from src.utils.Helper import Helper
 from src.algorithms.FastestPath import FastestPath
@@ -12,7 +13,7 @@ fastestPathDone = False
 
 
 def loadArena():
-    file1 = open(os.path.join('arenas', "arena4.txt"), 'r')
+    file1 = open("../arenas/arena4.txt", 'r')
     lines = file1.readlines()
 
     arena = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
@@ -50,6 +51,14 @@ def executeAction(simulator, robot, maze, actions, index):
                 runFastestPath(simulator, robot, maze, True)
 
 
+def runExploration(simulator, robot, exploredMaze, realMaze):
+    if not simulator.start:
+        simulator.window.after(100, lambda: runExploration(simulator, robot, exploredMaze, realMaze))
+        return
+    explorationAlgo = Exploration(exploredMaze, realMaze, robot, simulator, 300, 3600)
+    explorationAlgo.runExploration()
+
+
 def main():
     arena = loadArena()
     robot = Robot(START_ROW, START_COL)
@@ -69,13 +78,23 @@ def main():
             else:
                 maze[i][j] = Cell(i, j, isObstacle=False)
 
-    simulator = Simulator(scoreMaze, maze, robot)
+    """ Fastest path """
+    # simulator = Simulator(scoreMaze, robot)
 
     # runFastestPath(simulator, robot, maze, False)
     #
     # simulator.run()
 
-    # Exploration
+    """ Exploration """
+    scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            scoreMaze[i][j] = Color.UNEXPLORED.value
+    for dr in range(-1, 2):
+        for dc in range(-1, 2):
+            scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
+            scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
+
     exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
@@ -85,13 +104,14 @@ def main():
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
-    realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            realMaze[i][j] = Cell(i, j)
+    simulator = Simulator(scoreMaze, robot)
 
-    explorationAlgo = Exploration(exploredMaze, maze, robot, 300, 3600)
-    explorationAlgo.runExploration()
+    runExploration(simulator, robot, exploredMaze, maze)
+
+    simulator.run()
+
+
+def printExploredMaze(exploredMaze):
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
             if exploredMaze[i][j].isExplored:
@@ -102,7 +122,6 @@ def main():
             else:
                 print("X", end=" ")
         print()
-
 
 
 # Press the green button in the gutter to run the script.

@@ -1,5 +1,6 @@
 import tkinter
 
+from .Helper import Helper
 from ..static.Constants import CANVAS_WIDTH, CANVAS_HEIGHT, ROW_SIZE, \
     COL_SIZE, START_X, START_Y, GRID_WIDTH, colors, di, dj, START_ROW, START_COL, GOAL_ROW, GOAL_COL
 from ..static.Color import Color
@@ -8,14 +9,13 @@ from ..static.Action import Action
 
 class Simulator:
 
-    def __init__(self, scoreMaze, maze, robot):
+    def __init__(self, scoreMaze, robot):
         self.window = tkinter.Tk()
         self.window.title('MDP Simulator')
 
         self.canvas = tkinter.Canvas(self.window, bg='white', height=CANVAS_HEIGHT, width=CANVAS_WIDTH)
 
         self.scoreMaze = scoreMaze
-        self.maze = maze
         self.robot = robot
         self.box_ids = []
         self.start = False
@@ -102,29 +102,29 @@ class Simulator:
         c = self.robot.curCol
         direction = self.robot.curDir
         if action == Action.TURN_LEFT:
-            self.leftMoveUpdate(r, c, direction)
+            self.turnLeftUpdate(r, c, direction)
         elif action == Action.TURN_RIGHT:
-            self.rightMoveUpdate(r, c, direction)
+            self.turnRightUpdate(r, c, direction)
         elif action == Action.MOVE_FORWARD:
-            self.upMoveUpdate(r, c, direction)
+            self.moveForwardUpdate(r, c, direction)
         elif action == Action.MOVE_BACKWARD:
-            self.downMoveUpdate(r, c, direction)
+            self.moveBackwardUpdate(r, c, direction)
 
-    def leftMoveUpdate(self, r, c, direction):
+    def turnLeftUpdate(self, r, c, direction):
         self.canvas.itemconfig(self.box_ids[r + di[direction.value]][c + dj[direction.value]],
                                fill=colors[Color.ROBOT.value])
         new_direction = (direction.value - 1) % 4
         self.canvas.itemconfig(self.box_ids[r + di[new_direction]][c + dj[new_direction]],
                                fill=colors[Color.FACING.value])
 
-    def rightMoveUpdate(self, r, c, direction):
+    def turnRightUpdate(self, r, c, direction):
         self.canvas.itemconfig(self.box_ids[r + di[direction.value]][c + dj[direction.value]],
                                fill=colors[Color.ROBOT.value])
         new_direction = (direction.value + 1) % 4
         self.canvas.itemconfig(self.box_ids[r + di[new_direction]][c + dj[new_direction]],
                                fill=colors[Color.FACING.value])
 
-    def upMoveUpdate(self, r, c, direction):
+    def moveForwardUpdate(self, r, c, direction):
         if di[direction.value] != 0:
             set_r = r + di[direction.value] * 2
             # Set next move and pointing color
@@ -155,7 +155,7 @@ class Simulator:
             self.canvas.itemconfig(self.box_ids[r][clear_c], fill=colors[self.scoreMaze[r][clear_c]])
             self.canvas.itemconfig(self.box_ids[r + 1][clear_c], fill=colors[self.scoreMaze[r + 1][clear_c]])
 
-    def downMoveUpdate(self, r, c, direction):
+    def moveBackwardUpdate(self, r, c, direction):
         if di[direction.value] != 0:
             # Set backward move
             set_r = r - di[direction.value] * 2
@@ -186,3 +186,9 @@ class Simulator:
             self.canvas.itemconfig(self.box_ids[r - 1][clear_c], fill=colors[self.scoreMaze[r - 1][clear_c]])
             self.canvas.itemconfig(self.box_ids[r][clear_c], fill=colors[self.scoreMaze[r][clear_c]])
             self.canvas.itemconfig(self.box_ids[r + 1][clear_c], fill=colors[self.scoreMaze[r + 1][clear_c]])
+
+    def paintCell(self, row, col, color):
+        if Helper.inStartZone(row, col) or Helper.inGoalZone(row, col):
+            return
+        self.scoreMaze[row][col] = color.value
+        self.canvas.itemconfig(self.box_ids[row][col], fill=colors[color.value])
