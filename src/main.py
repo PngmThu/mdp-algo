@@ -5,6 +5,7 @@ from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
 from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL
+from src.static.Direction import Direction
 from src.utils.Helper import Helper
 from src.algorithms.FastestPath import FastestPath
 from src.utils.Simulator import Simulator
@@ -104,11 +105,20 @@ def main():
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
-    simulator = Simulator(scoreMaze, robot)
+    # simulator = Simulator(scoreMaze, robot)
+    #
+    # runExploration(simulator, robot, exploredMaze, maze)
+    #
+    # simulator.run()
 
-    runExploration(simulator, robot, exploredMaze, maze)
-
-    simulator.run()
+    """ Image Finding """
+    imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
+    # Create a set of real images
+    realImages = {(17, 7, Direction.LEFT), (15, 12, Direction.DOWN),
+                  (9, 10, Direction.RIGHT), (5, 12, Direction.UP),
+                  (6, 1, Direction.UP)}
+    imageFindingAlgo.setRealImages(realImages)
+    imageFindingAlgo.runImageFinding()
 
 
 def printExploredMaze(exploredMaze):

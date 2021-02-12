@@ -1,3 +1,4 @@
+from .Camera import Camera
 from ..static.Direction import Direction
 from ..static.Action import Action
 from ..objects.Sensor import Sensor
@@ -36,6 +37,9 @@ class Robot:
         self.LRLeft = Sensor(LR_SENSOR_LOWER, LR_SENSOR_UPPER, "LRL")
 
         self.updateSensorsPos()
+
+        # Camera is placed to capture left side of the robot
+        self.camera = Camera(row, col, Helper.previousDir(START_DIR))
 
     def setRobotPos(self, row, col):
         self.curRow = row
@@ -91,3 +95,9 @@ class Robot:
                   self.SRFrontRight.sense(exploredMaze, realMaze), self.SRRight.sense(exploredMaze, realMaze),
                   self.SRLeft.sense(exploredMaze, realMaze), self.LRLeft.sense(exploredMaze, realMaze)]
         return result
+
+    def updateCameraPos(self):
+        self.camera.setPos(self.curRow, self.curCol, Helper.previousDir(self.curDir))
+
+    def captureImage(self, exploredImages, realImages, realMaze):
+        return self.camera.capture(exploredImages, realImages, realMaze)

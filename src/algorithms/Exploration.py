@@ -4,31 +4,36 @@ from .FastestPath import FastestPath
 from ..static.Action import Action
 from ..static.Color import Color
 from ..static.Constants import ROW_SIZE, COL_SIZE, di, dj, START_ROW, START_COL, \
-    GOAL_ROW, GOAL_COL
+    GOAL_ROW, GOAL_COL, MAX_NUMBER_OF_IMAGES
 from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
 
 class Exploration:
 
-    def __init__(self, exploredMaze, realMaze, robot, simulator, coverageLimit, timeLimit):
+    def __init__(self, exploredMaze, realMaze, robot, simulator, coverageLimit, timeLimit, isImageFinding=False):
         self.exploredMaze = exploredMaze
         self.realMaze = realMaze
         self.robot = robot
         self.coverageLimit = coverageLimit
         self.timeLimit = timeLimit
+        self.isImageFinding = isImageFinding
         self.startTime = None
         self.endTime = None
-        self.exploredCount = 18  # start and goal zone
         self.simulator = simulator
         self.backToStart = False
+        self.exploredImages = set()
+        self.realImages = None
+
+    # realImages: the set of (row, col, direction) of real images
+    def setRealImages(self, realImages):
+        self.realImages = realImages
 
     """
      Loops through robot movements until one (or more) of the following conditions is met:
      1. Robot is back to start
      2. areaExplored >= coverageLimit and System.currentTimeMillis() >= endTime
     """
-
     def runExploration(self):
         print("Start exploration...")
 
@@ -65,11 +70,33 @@ class Exploration:
             self.printExploredMaze()
             self.goHome()
 
+    def runImageFinding(self):
+        print("Start image finding...")
+
+        # in seconds
+        self.startTime = time.time()
+        self.endTime = self.startTime + self.timeLimit
+
+        self.senseAndRepaint()
+
+        # self.executeNextMove()
+        self.nextMove()
+        while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
+            if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
+                break
+
+            self.nextMove()
+
+        print("Done image finding!")
+        print("Number of explored images:", len(self.exploredImages))
+        print(self.exploredImages)
+
+        # TO DO: Continue finding images when there are missing images although robot has returned to start zone
+
     """
     Determines the next move for the robot and executes it accordingly.
     For right hugging, look right first to always have obstacle at the right side
     """
-
     def nextMove(self):
         if self.lookRight():
             self.moveRobot(Action.TURN_RIGHT)
@@ -86,16 +113,20 @@ class Exploration:
             self.moveRobot(Action.TURN_RIGHT)
 
     def moveRobot(self, action):
-        self.simulator.updateRobotPos(action)
-
+        if self.simulator is not None:
+            self.simulator.updateRobotPos(action)
         self.robot.move(action)
         self.senseAndRepaint()
+        if self.isImageFinding:
+            self.captureImage()
 
     def senseAndRepaint(self):
         self.robot.updateSensorsPos()
         sensorResults = self.robot.sense(self.exploredMaze, self.realMaze)
         sensors = [self.robot.SRFrontLeft, self.robot.SRFrontCenter, self.robot.SRFrontRight,
                    self.robot.SRRight, self.robot.SRLeft, self.robot.LRLeft]
+        if self.simulator is None:
+            return
         # Repaint in simulator
         for i in range(len(sensors)):
             dist = sensorResults[i]
@@ -108,6 +139,11 @@ class Exploration:
                     self.simulator.paintCell(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value], Color.EMPTY_CELL)
                 if Helper.isValidCoordinates(sensor.curRow + dist * di[sensor.curDir.value], sensor.curCol + dist * dj[sensor.curDir.value]):
                     self.simulator.paintCell(sensor.curRow + dist * di[sensor.curDir.value], sensor.curCol + dist * dj[sensor.curDir.value], Color.OBSTACLE)
+
+    def captureImage(self):
+        self.robot.updateCameraPos()
+        self.robot.captureImage(self.exploredImages, self.realImages, self.realMaze)
+        # TO DO: repaint in simulator
 
     def calculateExploredCount(self):
         cnt = 0

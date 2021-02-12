@@ -112,3 +112,11 @@ class Helper:
         r = row + di[direction.value] * 2
         c = col + dj[direction.value] * 2
         return r, c
+
+    @staticmethod
+    def isBoundary(row, col):
+        if (row == -1 or row == ROW_SIZE) and 0 <= col < COL_SIZE:
+            return True
+        if (col == -1 or col == COL_SIZE) and 0 <= row < ROW_SIZE:
+            return True
+        return False

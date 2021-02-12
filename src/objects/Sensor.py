@@ -17,9 +17,11 @@ class Sensor:
         self.curCol = col
         self.curDir = direction
 
-    # Return the distance to the nearest obstacle or -1 if no obstacle is detected
-    # exploredMaze: the maze that is being explored
-    # realMaze: the real maze that should be the result after exploration
+    """
+    Return the distance to the nearest obstacle or -1 if no obstacle is detected
+    > exploredMaze: the maze that is being explored
+    > realMaze: the real maze that should be the result after exploration
+    """
     def sense(self, exploredMaze, realMaze):
         dr = di[self.curDir.value]
         dc = dj[self.curDir.value]
