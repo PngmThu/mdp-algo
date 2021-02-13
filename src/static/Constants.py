@@ -41,10 +41,13 @@ CANVAS_WIDTH = 600
 START_X = 50
 START_Y = 50
 GRID_WIDTH = 30
+CIRCLE_X = START_X + GRID_WIDTH / 2
+CIRCLE_Y = START_Y + GRID_WIDTH / 2
+CIRCLE_RADIUS = (GRID_WIDTH - 10) / 2
 
 # 0: empty cell (white)
 # 1: obstacle (blue)
 # 2: start & goal zone (green)
 # 3: robot (yellow)
 # 4: facing direction of robot (orange)
-colors = ['white', 'blue', 'green', 'yellow', 'orange', 'pink', 'grey']
+colors = ['white', 'blue', 'green', 'yellow', 'orange', 'pink', 'grey', 'coral1']

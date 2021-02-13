@@ -60,6 +60,15 @@ def runExploration(simulator, robot, exploredMaze, realMaze):
     explorationAlgo.runExploration()
 
 
+def runImageFinding(simulator, robot, exploredMaze, realMaze, realImages):
+    if not simulator.start:
+        simulator.window.after(100, lambda: runImageFinding(simulator, robot, exploredMaze, realMaze, realImages))
+        return
+    imageFindingAlgo = Exploration(exploredMaze, realMaze, robot, simulator, None, 3600, isImageFinding=True)
+    imageFindingAlgo.setRealImages(realImages)
+    imageFindingAlgo.runImageFinding()
+
+
 def main():
     arena = loadArena()
     robot = Robot(START_ROW, START_COL)
@@ -112,13 +121,19 @@ def main():
     # simulator.run()
 
     """ Image Finding """
-    imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
-    # Create a set of real images
+    # imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
+    # # Create a set of real images
     realImages = {(17, 7, Direction.LEFT), (15, 12, Direction.DOWN),
                   (9, 10, Direction.RIGHT), (5, 12, Direction.UP),
                   (6, 1, Direction.UP)}
-    imageFindingAlgo.setRealImages(realImages)
-    imageFindingAlgo.runImageFinding()
+    # imageFindingAlgo.setRealImages(realImages)
+    # imageFindingAlgo.runImageFinding()
+
+    simulator = Simulator(scoreMaze, robot)
+
+    runImageFinding(simulator, robot, exploredMaze, maze, realImages)
+
+    simulator.run()
 
 
 def printExploredMaze(exploredMaze):

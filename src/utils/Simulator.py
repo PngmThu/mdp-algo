@@ -2,9 +2,11 @@ import tkinter
 
 from .Helper import Helper
 from ..static.Constants import CANVAS_WIDTH, CANVAS_HEIGHT, ROW_SIZE, \
-    COL_SIZE, START_X, START_Y, GRID_WIDTH, colors, di, dj, START_ROW, START_COL, GOAL_ROW, GOAL_COL
+    COL_SIZE, START_X, START_Y, GRID_WIDTH, colors, di, dj, START_ROW, \
+    START_COL, GOAL_ROW, GOAL_COL, CIRCLE_X, CIRCLE_Y, CIRCLE_RADIUS
 from ..static.Color import Color
 from ..static.Action import Action
+from ..static.Direction import Direction
 
 
 class Simulator:
@@ -94,6 +96,8 @@ class Simulator:
                 self.canvas.itemconfig(self.box_ids[START_ROW + dr][START_COL + dc], fill=colors[Color.ROBOT.value])
         # Facing
         self.canvas.itemconfig(self.box_ids[START_ROW][START_COL + 1], fill=colors[Color.FACING.value])
+
+        # self.drawImageSticker(6, 0, Direction.DOWN)
 
     def updateRobotPos(self, action):
         if action is None:
@@ -192,3 +196,11 @@ class Simulator:
             return
         self.scoreMaze[row][col] = color.value
         self.canvas.itemconfig(self.box_ids[row][col], fill=colors[color.value])
+
+    def create_circle(self, x, y, r, **kwargs):
+        return self.canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)
+
+    def drawImageSticker(self, row, col, direction):
+        self.create_circle(CIRCLE_X + col * GRID_WIDTH + GRID_WIDTH / 2 * dj[direction.value],
+                           CIRCLE_Y + row * GRID_WIDTH + GRID_WIDTH / 2 * di[direction.value],
+                           CIRCLE_RADIUS, fill=colors[Color.IMAGE.value])

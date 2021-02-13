@@ -79,19 +79,30 @@ class Exploration:
 
         self.senseAndRepaint()
 
-        # self.executeNextMove()
-        self.nextMove()
-        while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
-            if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
-                break
-
-            self.nextMove()
-
-        print("Done image finding!")
-        print("Number of explored images:", len(self.exploredImages))
-        print(self.exploredImages)
+        self.executeNextMoveInImageFinding()
+        # self.nextMove()
+        # while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
+        #     if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
+        #         break
+        #
+        #     self.nextMove()
+        #
+        # print("Done image finding!")
+        # print("Number of explored images:", len(self.exploredImages))
+        # print(self.exploredImages)
 
         # TO DO: Continue finding images when there are missing images although robot has returned to start zone
+
+    def executeNextMoveInImageFinding(self):
+        self.nextMove()
+
+        # if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
+        #     return
+
+        if len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
+            self.simulator.window.after(150, lambda: self.executeNextMoveInImageFinding())
+        else:
+            self.printExploredImages()
 
     """
     Determines the next move for the robot and executes it accordingly.
@@ -142,8 +153,12 @@ class Exploration:
 
     def captureImage(self):
         self.robot.updateCameraPos()
-        self.robot.captureImage(self.exploredImages, self.realImages, self.realMaze)
-        # TO DO: repaint in simulator
+        images = self.robot.captureImage(self.exploredImages, self.realImages, self.realMaze)
+        if self.simulator is None:
+            return
+        # Draw image sticker in simulator
+        for image in images:
+            self.simulator.drawImageSticker(image[0], image[1], image[2])
 
     def calculateExploredCount(self):
         cnt = 0
@@ -253,3 +268,8 @@ class Exploration:
                     exploredCount = self.calculateExploredCount()
                     print("Final explored count:", exploredCount)
                     print("Time:", time.time() - self.startTime, "seconds")
+
+    def printExploredImages(self):
+        print("Done image finding!")
+        print("Number of explored images:", len(self.exploredImages))
+        print(self.exploredImages)

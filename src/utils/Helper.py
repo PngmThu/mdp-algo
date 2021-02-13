@@ -108,6 +108,10 @@ class Helper:
         return Direction((direction.value + 4 - 1) % 4)
 
     @staticmethod
+    def oppositeDir(direction):
+        return Direction((direction.value + 2) % 4)
+
+    @staticmethod
     def neighborOfUnexploredCellAt(row, col, direction):
         r = row + di[direction.value] * 2
         c = col + dj[direction.value] * 2

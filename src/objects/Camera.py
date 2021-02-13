@@ -36,7 +36,7 @@ class Camera:
                 else:
                     row += offset
                 if Helper.isBoundary(row, col) or (Helper.isValidCoordinates(row, col) and realMaze[row][col].isObstacle):
-                    image = (row, col, self.curDir)
+                    image = (row, col, Helper.oppositeDir(self.curDir))
                     if image in realImages and image not in exploredImages:
                         exploredImages.add(image)
                         result.append(image)

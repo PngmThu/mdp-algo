@@ -10,3 +10,4 @@ class Color(enum.Enum):
     FACING = 4
     WAYPOINT = 5
     UNEXPLORED = 6
+    IMAGE = 7
