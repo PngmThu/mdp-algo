@@ -1,6 +1,7 @@
 import os
 
 from src.algorithms.Exploration import Exploration
+from src.algorithms.ImageFinding import ImageFinding
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
@@ -56,7 +57,7 @@ def runExploration(simulator, robot, exploredMaze, realMaze):
     if not simulator.start:
         simulator.window.after(100, lambda: runExploration(simulator, robot, exploredMaze, realMaze))
         return
-    explorationAlgo = Exploration(exploredMaze, realMaze, robot, simulator, 300, 3600)
+    explorationAlgo = Exploration(exploredMaze, realMaze, robot, simulator, 3600, 300)
     explorationAlgo.runExploration()
 
 
@@ -64,8 +65,7 @@ def runImageFinding(simulator, robot, exploredMaze, realMaze, realImages):
     if not simulator.start:
         simulator.window.after(100, lambda: runImageFinding(simulator, robot, exploredMaze, realMaze, realImages))
         return
-    imageFindingAlgo = Exploration(exploredMaze, realMaze, robot, simulator, None, 3600, isImageFinding=True)
-    imageFindingAlgo.setRealImages(realImages)
+    imageFindingAlgo = ImageFinding(exploredMaze, realMaze, robot, simulator, 3600, realImages)
     imageFindingAlgo.runImageFinding()
 
 
@@ -114,11 +114,11 @@ def main():
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
-    # simulator = Simulator(scoreMaze, robot)
-    #
-    # runExploration(simulator, robot, exploredMaze, maze)
-    #
-    # simulator.run()
+    simulator = Simulator(scoreMaze, robot)
+
+    runExploration(simulator, robot, exploredMaze, maze)
+
+    simulator.run()
 
     """ Image Finding """
     # imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
@@ -129,11 +129,11 @@ def main():
     # imageFindingAlgo.setRealImages(realImages)
     # imageFindingAlgo.runImageFinding()
 
-    simulator = Simulator(scoreMaze, robot)
-
-    runImageFinding(simulator, robot, exploredMaze, maze, realImages)
-
-    simulator.run()
+    # simulator = Simulator(scoreMaze, robot)
+    #
+    # runImageFinding(simulator, robot, exploredMaze, maze, realImages)
+    #
+    # simulator.run()
 
 
 def printExploredMaze(exploredMaze):
