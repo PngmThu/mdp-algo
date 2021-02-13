@@ -90,7 +90,7 @@ def main():
 
     """ Fastest path """
     # simulator = Simulator(scoreMaze, robot)
-
+    #
     # runFastestPath(simulator, robot, maze, False)
     #
     # simulator.run()
@@ -114,11 +114,11 @@ def main():
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
-    simulator = Simulator(scoreMaze, robot)
-
-    runExploration(simulator, robot, exploredMaze, maze)
-
-    simulator.run()
+    # simulator = Simulator(scoreMaze, robot)
+    #
+    # runExploration(simulator, robot, exploredMaze, maze)
+    #
+    # simulator.run()
 
     """ Image Finding """
     # imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
@@ -129,11 +129,11 @@ def main():
     # imageFindingAlgo.setRealImages(realImages)
     # imageFindingAlgo.runImageFinding()
 
-    # simulator = Simulator(scoreMaze, robot)
-    #
-    # runImageFinding(simulator, robot, exploredMaze, maze, realImages)
-    #
-    # simulator.run()
+    simulator = Simulator(scoreMaze, robot)
+
+    runImageFinding(simulator, robot, exploredMaze, maze, realImages)
+
+    simulator.run()
 
 
 def printExploredMaze(exploredMaze):
