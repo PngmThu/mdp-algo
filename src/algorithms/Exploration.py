@@ -2,7 +2,6 @@ import time
 
 from .ExplorationAlgo import ExplorationAlgo
 from .FastestPath import FastestPath
-from ..static.Action import Action
 from ..static.Constants import ROW_SIZE, COL_SIZE, START_ROW, START_COL, \
     GOAL_ROW, GOAL_COL
 from ..static.Direction import Direction

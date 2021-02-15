@@ -1,0 +1,33 @@
+import enum
+
+
+class CommandType(enum.Enum):
+
+    """ Send """
+    ROBOT_POS = "ROBOT_POS"
+    MAP = "MAP"
+    WAYPOINT = "WAYPOINT"
+    FINISH_FASTEST_PATH = "FINISH_FASTEST_PATH"
+    FINISH_EXPLORATION = "FINISH_EXPLORATION"
+    MOVE_FORWARD = "MOVE_FORWARD"
+    TURN_RIGHT = "TURN_RIGHT"
+    TURN_LEFT = "TURN_LEFT"
+    CALIBRATE = "CALIBRATE"
+    MOVE_FORWARD_MULTIPLE = "MOVE_FORWARD_MULTIPLE"
+    CAPTURE = "CAPTURE"
+
+    """ Receive """
+    # From image recognition
+    IMAGE = "IMAGE"
+    DELETE_IMAGE = "DELETE_IMAGE"
+    FINISH_IR = "FINISH_IR"
+
+    # From arduino
+    SENSOR_DATA = "SENSOR_DATA"
+    ACTION_COMPLETE = "ACTION_COMPLETE"
+
+    # From android
+    FP_START = "FP_START"
+    EX_START = "EX_START"
+    IF_START = "IF_START"
+    SET_WAYPOINT = "SET_WAYPOINT"

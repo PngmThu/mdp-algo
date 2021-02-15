@@ -1,7 +1,9 @@
 import os
+import time
 
 from src.algorithms.Exploration import Exploration
 from src.algorithms.ImageFinding import ImageFinding
+from src.communication.CommManager import CommManager
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
@@ -129,11 +131,25 @@ def main():
     # imageFindingAlgo.setRealImages(realImages)
     # imageFindingAlgo.runImageFinding()
 
-    simulator = Simulator(scoreMaze, robot)
+    # simulator = Simulator(scoreMaze, robot)
+    #
+    # runImageFinding(simulator, robot, exploredMaze, maze, realImages)
+    #
+    # simulator.run()
 
-    runImageFinding(simulator, robot, exploredMaze, maze, realImages)
+    """ CommManager """
+    CommManager.connect()
 
-    simulator.run()
+    # Need to use mutex to make sure that 2 commands are well-received
+    CommManager.sendMsg("COMMAND_TYPE", ["abc", "xyz"])
+    # time.sleep(1) # sleep 1s
+    CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
+
+    CommManager.recvMsg()
+    print("First received message")
+
+    CommManager.recvMsg()
+    print("Second received message")
 
 
 def printExploredMaze(exploredMaze):

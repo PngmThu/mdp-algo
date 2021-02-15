@@ -18,6 +18,9 @@ while True:
         break
     print("Byte data:", data)
     print("Str data:", data.decode("utf-8"))
-    conn.send(data)
+
+    # data = input("Enter your value: ")
+    # print(data)
+    # conn.send(str.encode(data))
 socket.close()
 print('client disconnected')
