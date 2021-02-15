@@ -58,25 +58,6 @@ class Exploration(ExplorationAlgo):
             self.printExploredMaze()
             self.goHome()
 
-    """
-    Determines the next move for the robot and executes it accordingly.
-    For right hugging, look right first to always have obstacle at the right side
-    """
-    def nextMove(self):
-        if self.lookRight():
-            self.moveRobot(Action.TURN_RIGHT)
-            if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
-        elif self.lookForward():
-            self.moveRobot(Action.MOVE_FORWARD)
-        elif self.lookLeft():
-            self.moveRobot(Action.TURN_LEFT)
-            if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
-        else:
-            self.moveRobot(Action.TURN_RIGHT)
-            self.moveRobot(Action.TURN_RIGHT)
-
     def calculateExploredCount(self):
         cnt = 0
         for i in range(ROW_SIZE):

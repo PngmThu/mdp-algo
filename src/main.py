@@ -76,9 +76,9 @@ def main():
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
             if arena[i][j] == 1:
-                scoreMaze[i][j] = 1
+                scoreMaze[ROW_SIZE - 1 - i][j] = 1
             else:
-                scoreMaze[i][j] = 0
+                scoreMaze[ROW_SIZE - 1 - i][j] = 0
 
     maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
     for i in range(ROW_SIZE):
@@ -123,9 +123,9 @@ def main():
     """ Image Finding """
     # imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
     # # Create a set of real images
-    realImages = {(17, 7, Direction.LEFT), (15, 12, Direction.DOWN),
-                  (9, 10, Direction.RIGHT), (5, 12, Direction.UP),
-                  (6, 1, Direction.UP)}
+    realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
+                  (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
+                  (13, 1, Direction.UP)}
     # imageFindingAlgo.setRealImages(realImages)
     # imageFindingAlgo.runImageFinding()
 

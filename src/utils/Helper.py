@@ -27,9 +27,9 @@ class Helper:
         elif (targetCell.col - curCell.col) > 0:
             return Direction.RIGHT
         else:
-            if (targetCell.row - curCell.row) > 0:
+            if (curCell.row - targetCell.row) > 0:
                 return Direction.DOWN
-            elif (curCell.row - targetCell.row) > 0:
+            elif (targetCell.row - curCell.row) > 0:
                 return Direction.UP
             else:
                 return curDir

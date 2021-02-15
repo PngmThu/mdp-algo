@@ -75,6 +75,7 @@ class Simulator:
 
     # Draw cells and color them
     def setupLayout(self):
+        # Color for start and goal zone
         for dr in range(-1, 2):
             for dc in range(-1, 2):
                 self.scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
@@ -85,19 +86,20 @@ class Simulator:
             for j in range(COL_SIZE):
                 self.box_ids[i].append(self.canvas.create_rectangle(
                     START_X + j * GRID_WIDTH,
-                    START_Y + i * GRID_WIDTH,
+                    START_Y - i * GRID_WIDTH,
                     START_X + (j + 1) * GRID_WIDTH,
-                    START_Y + (i + 1) * GRID_WIDTH,
+                    START_Y - (i + 1) * GRID_WIDTH,
                     fill=colors[self.scoreMaze[i][j]]
                 ))
 
         for dr in range(-1, 2):
             for dc in range(-1, 2):
                 self.canvas.itemconfig(self.box_ids[START_ROW + dr][START_COL + dc], fill=colors[Color.ROBOT.value])
-        # Facing
+        # Facing: Left
         self.canvas.itemconfig(self.box_ids[START_ROW][START_COL + 1], fill=colors[Color.FACING.value])
 
         # self.drawImageSticker(6, 0, Direction.DOWN)
+        # self.drawImageSticker(2, 7, Direction.LEFT)
 
     def updateRobotPos(self, action):
         if action is None:
@@ -117,18 +119,19 @@ class Simulator:
     def turnLeftUpdate(self, r, c, direction):
         self.canvas.itemconfig(self.box_ids[r + di[direction.value]][c + dj[direction.value]],
                                fill=colors[Color.ROBOT.value])
-        new_direction = (direction.value - 1) % 4
-        self.canvas.itemconfig(self.box_ids[r + di[new_direction]][c + dj[new_direction]],
+        new_direction = Helper.previousDir(direction)
+        self.canvas.itemconfig(self.box_ids[r + di[new_direction.value]][c + dj[new_direction.value]],
                                fill=colors[Color.FACING.value])
 
     def turnRightUpdate(self, r, c, direction):
         self.canvas.itemconfig(self.box_ids[r + di[direction.value]][c + dj[direction.value]],
                                fill=colors[Color.ROBOT.value])
-        new_direction = (direction.value + 1) % 4
-        self.canvas.itemconfig(self.box_ids[r + di[new_direction]][c + dj[new_direction]],
+        new_direction = Helper.nextDir(direction)
+        self.canvas.itemconfig(self.box_ids[r + di[new_direction.value]][c + dj[new_direction.value]],
                                fill=colors[Color.FACING.value])
 
     def moveForwardUpdate(self, r, c, direction):
+        # Up or down
         if di[direction.value] != 0:
             set_r = r + di[direction.value] * 2
             # Set next move and pointing color
@@ -143,6 +146,7 @@ class Simulator:
             self.canvas.itemconfig(self.box_ids[clear_r][c - 1], fill=colors[self.scoreMaze[clear_r][c - 1]])
             self.canvas.itemconfig(self.box_ids[clear_r][c], fill=colors[self.scoreMaze[clear_r][c]])
             self.canvas.itemconfig(self.box_ids[clear_r][c + 1], fill=colors[self.scoreMaze[clear_r][c + 1]])
+        # Left or right
         elif dj[direction.value] != 0:
             set_c = c + dj[direction.value] * 2
             # Set next move and pointing color
@@ -202,5 +206,5 @@ class Simulator:
 
     def drawImageSticker(self, row, col, direction):
         self.create_circle(CIRCLE_X + col * GRID_WIDTH + GRID_WIDTH / 2 * dj[direction.value],
-                           CIRCLE_Y + row * GRID_WIDTH + GRID_WIDTH / 2 * di[direction.value],
+                           CIRCLE_Y - row * GRID_WIDTH - GRID_WIDTH / 2 * di[direction.value],
                            CIRCLE_RADIUS, fill=colors[Color.IMAGE.value])
