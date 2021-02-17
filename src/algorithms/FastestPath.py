@@ -147,6 +147,7 @@ class FastestPath:
             self.robot.moveForwardMultiple(fCount)
             Helper.receiveActionComplete()
 
+    # TO DO: find cell that can stop to calibrate
     def canCalibrateAt(self, row, col, direction):
         # 3 front sensors
         dr = di[direction.value]
@@ -155,17 +156,6 @@ class FastestPath:
             for j in range(-1, 2):
                 if not Helper.isValidCoordinates(self.maze[row + dr][col + j]) or self.maze[row + dr][col + j].isObstacle:
                     return True
-        elif dc != 0:
-            for i in range(-1, 2):
-                if not Helper.isValidCoordinates(self.maze[row + i][col + dc]) or self.maze[row + i][col + dc].isObstacle:
-                    return True
-
-        # 1 right sensor
-        dr = di[Helper.nextDir(direction).value]
-        dc = dj[Helper.nextDir(direction).value]
-        if dr != 0:
-            if not Helper.isValidCoordinates(self.maze[row + dr][col + j]) or self.maze[row + dr][col + j].isObstacle:
-                return True
         elif dc != 0:
             for i in range(-1, 2):
                 if not Helper.isValidCoordinates(self.maze[row + i][col + dc]) or self.maze[row + i][col + dc].isObstacle:

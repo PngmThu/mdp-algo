@@ -1,5 +1,4 @@
-import os
-import time
+from threading import Thread
 
 from src.algorithms.Exploration import Exploration
 from src.algorithms.ImageFinding import ImageFinding
@@ -30,115 +29,8 @@ def loadArena():
     return arena
 
 
-def runFastestPath(simulator, robot, maze, toGoal):
-    global fastestPathDone
-    if not toGoal:
-        if simulator.waypointRow is None or simulator.waypointCol is None or not simulator.start:
-            simulator.window.after(100, lambda: runFastestPath(simulator, robot, maze, False))
-            return
-        actions = FastestPath(maze, robot, simulator.waypointRow, simulator.waypointCol).runFastestPath()
-    else:
-        actions = FastestPath(maze, robot, GOAL_ROW, GOAL_COL).runFastestPath()
-        fastestPathDone = True
-    executeAction(simulator, robot, maze, actions, 0)
-
-
-def executeAction(simulator, robot, maze, actions, index):
-    global fastestPathDone
-
-    if index < len(actions):
-        simulator.updateRobotPos(actions[index])
-        robot.move(actions[index])
-        if index + 1 < len(actions):
-            simulator.window.after(150, lambda: executeAction(simulator, robot, maze, actions, index + 1))
-        else:
-            if not fastestPathDone:
-                runFastestPath(simulator, robot, maze, True)
-
-
-def runExploration(simulator, robot, exploredMaze, realMaze):
-    if not simulator.start:
-        simulator.window.after(100, lambda: runExploration(simulator, robot, exploredMaze, realMaze))
-        return
-    explorationAlgo = Exploration(exploredMaze, realMaze, robot, simulator, 3600, 300)
-    explorationAlgo.runExploration()
-
-
-def runImageFinding(simulator, robot, exploredMaze, realMaze, realImages):
-    if not simulator.start:
-        simulator.window.after(100, lambda: runImageFinding(simulator, robot, exploredMaze, realMaze, realImages))
-        return
-    imageFindingAlgo = ImageFinding(exploredMaze, realMaze, robot, simulator, 3600, realImages)
-    imageFindingAlgo.runImageFinding()
-
-
 def main():
-    # arena = loadArena()
-    # robot = Robot(START_ROW, START_COL)
-    # scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    # for i in range(ROW_SIZE):
-    #     for j in range(COL_SIZE):
-    #         if arena[i][j] == 1:
-    #             scoreMaze[ROW_SIZE - 1 - i][j] = 1
-    #         else:
-    #             scoreMaze[ROW_SIZE - 1 - i][j] = 0
-    #
-    # maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    # for i in range(ROW_SIZE):
-    #     for j in range(COL_SIZE):
-    #         if scoreMaze[i][j] == 1:
-    #             maze[i][j] = Cell(i, j, isObstacle=True)
-    #         else:
-    #             maze[i][j] = Cell(i, j, isObstacle=False)
-
-    """ Fastest path """
-    # simulator = Simulator(scoreMaze, robot)
-    #
-    # runFastestPath(simulator, robot, maze, False)
-    #
-    # simulator.run()
-
-    """ Exploration """
-    # scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    # for i in range(ROW_SIZE):
-    #     for j in range(COL_SIZE):
-    #         scoreMaze[i][j] = Color.UNEXPLORED.value
-    # for dr in range(-1, 2):
-    #     for dc in range(-1, 2):
-    #         scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
-    #         scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
-    #
-    # exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    # for i in range(ROW_SIZE):
-    #     for j in range(COL_SIZE):
-    #         exploredMaze[i][j] = Cell(i, j)
-    # for dr in range(-1, 2):
-    #     for dc in range(-1, 2):
-    #         exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
-    #         exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
-
-    # simulator = Simulator(scoreMaze, robot)
-    #
-    # runExploration(simulator, robot, exploredMaze, maze)
-    #
-    # simulator.run()
-
-    """ Image Finding """
-    # imageFindingAlgo = Exploration(exploredMaze, maze, robot, None, None, 3600, isImageFinding=True)
-    # # Create a set of real images
-    realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
-                  (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
-                  (13, 1, Direction.UP)}
-    # imageFindingAlgo.setRealImages(realImages)
-    # imageFindingAlgo.runImageFinding()
-
-    # simulator = Simulator(scoreMaze, robot)
-    #
-    # runImageFinding(simulator, robot, exploredMaze, maze, realImages)
-    #
-    # simulator.run()
-
-    """ CommManager """
+    """ Test CommManager """
     # CommManager.connect()
     #
     # # Need to use mutex to make sure that 2 commands are well-received
@@ -154,43 +46,97 @@ def main():
 
     printMenu()
     choice = int(input("Enter your choice: "))
-    while 1 <= choice <= 4:
+    while 1 <= choice <= 6:
         arena = loadArena()
+        # Fastest Path
         if choice == 1 or choice == 2:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             fastestPathInit(arena, scoreMaze, maze)
 
             if choice == 1:
-                robot = Robot(START_ROW, START_COL, realRun=False)
-                FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun=False).runFastestPath()
-            elif choice == 2:
-                robot = Robot(START_ROW, START_COL, realRun=True)
+                realRun = False
+            else:
+                realRun = True
+            robot = Robot(START_ROW, START_COL, realRun)
+            simulator = Simulator(scoreMaze, robot)
+            robot.setSimulator(simulator)
 
+            # Real run
+            if choice == 2:
                 CommManager.connect()
-
                 msg = CommManager.recvMsg()
                 while msg != CommandType.FP_START.value:
                     msg = CommManager.recvMsg()
-                FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun=True).runFastestPath()
+            # Start fastest path in a new thread
+            FPthread = Thread(
+                target=lambda: FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun).runFastestPath(),
+                daemon=True)
+            FPthread.start()
+
+            simulator.run()
+        # Exploration
         elif choice == 3 or choice == 4:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             explorationInit(scoreMaze, exploredMaze, arena, realMaze)
+
             if choice == 3:
-                robot = Robot(START_ROW, START_COL, realRun=False)
-                Exploration(exploredMaze, realMaze, robot, None, 3600, 300, realRun=False).runExploration()
-            elif choice == 4:
-                robot = Robot(START_ROW, START_COL, realRun=True)
+                realRun = False
+            else:
+                realRun = True
+            robot = Robot(START_ROW, START_COL, realRun)
+            simulator = Simulator(scoreMaze, robot)
+            robot.setSimulator(simulator)
 
+            if choice == 4:
                 CommManager.connect()
-
                 msg = CommManager.recvMsg()
                 while msg != CommandType.EX_START.value:
                     msg = CommManager.recvMsg()
 
-                Exploration(exploredMaze, realMaze, robot, None, 3600, 300, realRun=True).runExploration()
+            # Start exploration in a new thread
+            EXThread = Thread(
+                target=lambda: Exploration(exploredMaze, realMaze, robot, simulator, 3600, 300,
+                                           realRun).runExploration(),
+                daemon=True)
+            EXThread.start()
+
+            simulator.run()
+        # Image Finding
+        elif choice == 5 or choice == 6:
+            scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            explorationInit(scoreMaze, exploredMaze, arena, realMaze)
+            realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
+                          (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
+                          (13, 1, Direction.UP)}
+
+            if choice == 5:
+                realRun = False
+            else:
+                realRun = True
+
+            robot = Robot(START_ROW, START_COL, realRun)
+            simulator = Simulator(scoreMaze, robot)
+            robot.setSimulator(simulator)
+
+            if choice == 6:
+                CommManager.connect()
+                msg = CommManager.recvMsg()
+                while msg != CommandType.IF_START.value:
+                    msg = CommManager.recvMsg()
+
+            # Start image finding in a new thread
+            IFThread = Thread(
+                target=lambda: ImageFinding(exploredMaze, realMaze, robot,
+                                            simulator, 3600, realRun, realImages).runImageFinding(),
+                daemon=True)
+            IFThread.start()
+
+            simulator.run()
 
         printMenu()
         choice = int(input("Enter your choice: "))
@@ -202,6 +148,8 @@ def printMenu():
     print("2) Run real fastest path")
     print("3) Run simulated exploration")
     print("4) Run real exploration")
+    print("5) Run simulated image finding")
+    print("6) Run real image finding")
 
 
 def fastestPathInit(arena, scoreMaze, maze):
@@ -240,22 +188,9 @@ def explorationInit(scoreMaze, exploredMaze, arena, realMaze):
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
             if arena[i][j] == 1:
-                realMaze[i][j] = Cell(i, j, isObstacle=True)
+                realMaze[ROW_SIZE - 1 - i][j] = Cell(i, j, isObstacle=True)
             else:
-                realMaze[i][j] = Cell(i, j, isObstacle=False)
-
-
-def printExploredMaze(exploredMaze):
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            if exploredMaze[i][j].isExplored:
-                if exploredMaze[i][j].isObstacle:
-                    print("1", end=" ")
-                else:
-                    print("0", end=" ")
-            else:
-                print("X", end=" ")
-        print()
+                realMaze[ROW_SIZE - 1 - i][j] = Cell(i, j, isObstacle=False)
 
 
 # Press the green button in the gutter to run the script.

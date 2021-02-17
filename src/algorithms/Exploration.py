@@ -32,7 +32,6 @@ class Exploration(ExplorationAlgo):
 
         self.senseAndRepaint()
 
-        # self.executeNextMove()
         self.nextMove()
         exploredCount = self.calculateExploredCount()
         while exploredCount < self.coverageLimit and time.time() < self.endTime:
@@ -46,19 +45,6 @@ class Exploration(ExplorationAlgo):
 
         self.goHome()
 
-    def executeNextMove(self):
-        self.nextMove()
-
-        # if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
-        #     return
-
-        exploredCount = self.calculateExploredCount()
-        if exploredCount < self.coverageLimit and time.time() < self.endTime:
-            self.simulator.window.after(150, lambda: self.executeNextMove())
-        else:
-            self.printExploredMaze()
-            self.goHomeSimulated()
-
     def calculateExploredCount(self):
         cnt = 0
         for i in range(ROW_SIZE):
@@ -67,28 +53,6 @@ class Exploration(ExplorationAlgo):
                     cnt += 1
         print("Explored count:", cnt)
         return cnt
-
-    def goHomeSimulated(self):
-        # Go to goal if never touched goal and then go back to start
-        if not self.robot.touchedGoal and time.time() < self.endTime:
-            actions = FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL, self.realRun).runFastestPath()
-            # for action in actions:
-            #     self.moveRobot(action)
-            self.executeAction(actions, 0)
-        else:
-            # Go back start
-            actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
-            self.backToStart = True
-            self.executeAction(actions, 0)
-            # for action in actions:
-            #     self.moveRobot(action)
-            #
-            # print("Exploration complete!")
-            # exploredCount = self.calculateExploredCount()
-            # print("Final explored count:", exploredCount)
-            # print("Time:", time.time() - self.startTime, "seconds")
-
-        # TO DO: Calibrate to make sure that the robot is entirely inside start zone
 
     def goHome(self):
         # Go to goal if never touched goal and then go back to start
@@ -139,20 +103,3 @@ class Exploration(ExplorationAlgo):
                 else:
                     print("X", end=" ")
             print()
-
-    def executeAction(self, actions, index):
-        if index < len(actions):
-            self.simulator.updateRobotPos(actions[index])
-            self.robot.move(actions[index])
-            if index + 1 < len(actions):
-                self.simulator.window.after(150, lambda: self.executeAction(actions, index + 1))
-            else:
-                if not self.backToStart:
-                    actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
-                    self.backToStart = True
-                    self.executeAction(actions, 0)
-                else:
-                    print("Exploration complete!")
-                    exploredCount = self.calculateExploredCount()
-                    print("Final explored count:", exploredCount)
-                    print("Time:", time.time() - self.startTime, "seconds")

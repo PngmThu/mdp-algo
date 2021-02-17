@@ -1,3 +1,5 @@
+import time
+
 from .Camera import Camera
 from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
@@ -31,6 +33,7 @@ class Robot:
         self.curDir = START_DIR
         self.touchedGoal = False
         self.realRun = realRun
+        self.simulator = None
 
         self.SRFrontLeft = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFL")
         self.SRFrontCenter = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFC")
@@ -48,7 +51,12 @@ class Robot:
         self.curRow = row
         self.curCol = col
 
+    def setSimulator(self, simulator):
+        self.simulator = simulator
+
     def move(self, action, sendMsg):
+        self.updateSimulator(action)
+
         if action == Action.MOVE_FORWARD:
             self.curRow += di[self.curDir.value]
             self.curCol += dj[self.curDir.value]
@@ -106,6 +114,17 @@ class Robot:
         # Receive sensor data from arduino
         msg = CommManager.recvMsg()
         msgArr = msg.split(SPLITTER)
+        while msgArr[0] != CommandType.SENSOR_DATA.value:
+            # If an image is identified
+            if msgArr[0] == CommandType.IMAGE.value:
+                row = int(msgArr[1])
+                col = int(msgArr[2])
+                direction = int(msgArr[3])
+                if self.simulator is not None:
+                    self.simulator.drawImageSticker(row, col, Direction(direction))
+            msg = CommManager.recvMsg()
+            msgArr = msg.split(SPLITTER)
+
         result = []
         for i in range(1, 7):
             result.append(int(msgArr[i]))
@@ -124,7 +143,16 @@ class Robot:
         self.camera.setPos(self.curRow, self.curCol, Helper.previousDir(self.curDir))
 
     def captureImage(self, exploredImages, realImages, realMaze):
-        return self.camera.capture(exploredImages, realImages, realMaze)
+        if not self.realRun:
+            images = self.camera.capture(exploredImages, realImages, realMaze)
+            if self.simulator is not None:
+                # Draw image sticker in simulator
+                for image in images:
+                    self.simulator.drawImageSticker(image[0], image[1], image[2])
+            return
+        # Send camera position and ask to capture image
+        data = [self.camera.curRow, self.camera.curCol, self.camera.curDir.value]
+        CommManager.sendMsg(CommandType.CAPTURE.value, data)
 
     def sendAction(self, action):
         # Send action to arduino
@@ -132,8 +160,8 @@ class Robot:
         CommManager.sendMsg(action.value)
         if action != Action.CALIBRATE:
             # Send robot position to android
-            dataArr = [self.curRow, self.curCol, self.curDir.value]
-            CommManager.sendMsg(CommandType.ROBOT_POS.value, dataArr)
+            data = [self.curRow, self.curCol, self.curDir.value]
+            CommManager.sendMsg(CommandType.ROBOT_POS.value, data)
 
     def moveForwardMultiple(self, count):
         if count == 1:
@@ -147,3 +175,8 @@ class Robot:
         # Send robot position to android
         dataArr = [self.curRow, self.curCol, self.curDir.value]
         CommManager.sendMsg(CommandType.ROBOT_POS.value, dataArr)
+
+    def updateSimulator(self, action):
+        if self.simulator is not None:
+            time.sleep(0.1)  # sleep 100ms
+            self.simulator.updateRobotPos(action)
