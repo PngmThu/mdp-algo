@@ -1,7 +1,7 @@
 import socket
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 8080  # Port to listen on
+PORT = 5555  # Port to listen on
 
 # TCP socket
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
