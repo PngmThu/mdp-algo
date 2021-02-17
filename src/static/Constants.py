@@ -23,6 +23,7 @@ START_DIR = Direction.RIGHT
 INF_COST = 999999
 MOVE_COST = 10
 TURN_COST = 20
+MAX_FOWARD = 5
 
 # Sensor
 SR_SENSOR_LOWER = 1
@@ -46,6 +47,9 @@ GRID_WIDTH = 30
 CIRCLE_X = START_X + GRID_WIDTH / 2
 CIRCLE_Y = START_Y - GRID_WIDTH / 2
 CIRCLE_RADIUS = (GRID_WIDTH - 10) / 2
+
+# CommManger
+SPLITTER = ":"
 
 # 0: empty cell (white)
 # 1: obstacle (blue)

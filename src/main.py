@@ -4,6 +4,7 @@ import time
 from src.algorithms.Exploration import Exploration
 from src.algorithms.ImageFinding import ImageFinding
 from src.communication.CommManager import CommManager
+from src.communication.CommandType import CommandType
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
@@ -72,23 +73,23 @@ def runImageFinding(simulator, robot, exploredMaze, realMaze, realImages):
 
 
 def main():
-    arena = loadArena()
-    robot = Robot(START_ROW, START_COL)
-    scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            if arena[i][j] == 1:
-                scoreMaze[ROW_SIZE - 1 - i][j] = 1
-            else:
-                scoreMaze[ROW_SIZE - 1 - i][j] = 0
-
-    maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            if scoreMaze[i][j] == 1:
-                maze[i][j] = Cell(i, j, isObstacle=True)
-            else:
-                maze[i][j] = Cell(i, j, isObstacle=False)
+    # arena = loadArena()
+    # robot = Robot(START_ROW, START_COL)
+    # scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+    # for i in range(ROW_SIZE):
+    #     for j in range(COL_SIZE):
+    #         if arena[i][j] == 1:
+    #             scoreMaze[ROW_SIZE - 1 - i][j] = 1
+    #         else:
+    #             scoreMaze[ROW_SIZE - 1 - i][j] = 0
+    #
+    # maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+    # for i in range(ROW_SIZE):
+    #     for j in range(COL_SIZE):
+    #         if scoreMaze[i][j] == 1:
+    #             maze[i][j] = Cell(i, j, isObstacle=True)
+    #         else:
+    #             maze[i][j] = Cell(i, j, isObstacle=False)
 
     """ Fastest path """
     # simulator = Simulator(scoreMaze, robot)
@@ -98,23 +99,23 @@ def main():
     # simulator.run()
 
     """ Exploration """
-    scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            scoreMaze[i][j] = Color.UNEXPLORED.value
-    for dr in range(-1, 2):
-        for dc in range(-1, 2):
-            scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
-            scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
-
-    exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            exploredMaze[i][j] = Cell(i, j)
-    for dr in range(-1, 2):
-        for dc in range(-1, 2):
-            exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
-            exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
+    # scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+    # for i in range(ROW_SIZE):
+    #     for j in range(COL_SIZE):
+    #         scoreMaze[i][j] = Color.UNEXPLORED.value
+    # for dr in range(-1, 2):
+    #     for dc in range(-1, 2):
+    #         scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
+    #         scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
+    #
+    # exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+    # for i in range(ROW_SIZE):
+    #     for j in range(COL_SIZE):
+    #         exploredMaze[i][j] = Cell(i, j)
+    # for dr in range(-1, 2):
+    #     for dc in range(-1, 2):
+    #         exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
+    #         exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
     # simulator = Simulator(scoreMaze, robot)
     #
@@ -138,18 +139,110 @@ def main():
     # simulator.run()
 
     """ CommManager """
-    CommManager.connect()
+    # CommManager.connect()
+    #
+    # # Need to use mutex to make sure that 2 commands are well-received
+    # CommManager.sendMsg("COMMAND_TYPE", ["abc", "xyz"])
+    # # time.sleep(1) # sleep 1s
+    # CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
+    #
+    # CommManager.recvMsg()
+    # print("First received message")
+    #
+    # CommManager.recvMsg()
+    # print("Second received message")
 
-    # Need to use mutex to make sure that 2 commands are well-received
-    CommManager.sendMsg("COMMAND_TYPE", ["abc", "xyz"])
-    # time.sleep(1) # sleep 1s
-    CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
+    printMenu()
+    choice = int(input("Enter your choice: "))
+    while 1 <= choice <= 4:
+        arena = loadArena()
+        if choice == 1 or choice == 2:
+            scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            fastestPathInit(arena, scoreMaze, maze)
 
-    CommManager.recvMsg()
-    print("First received message")
+            if choice == 1:
+                robot = Robot(START_ROW, START_COL, realRun=False)
+                FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun=False).runFastestPath()
+            elif choice == 2:
+                robot = Robot(START_ROW, START_COL, realRun=True)
 
-    CommManager.recvMsg()
-    print("Second received message")
+                CommManager.connect()
+
+                msg = CommManager.recvMsg()
+                while msg != CommandType.FP_START.value:
+                    msg = CommManager.recvMsg()
+                FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun=True).runFastestPath()
+        elif choice == 3 or choice == 4:
+            scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            explorationInit(scoreMaze, exploredMaze, arena, realMaze)
+            if choice == 3:
+                robot = Robot(START_ROW, START_COL, realRun=False)
+                Exploration(exploredMaze, realMaze, robot, None, 3600, 300, realRun=False).runExploration()
+            elif choice == 4:
+                robot = Robot(START_ROW, START_COL, realRun=True)
+
+                CommManager.connect()
+
+                msg = CommManager.recvMsg()
+                while msg != CommandType.EX_START.value:
+                    msg = CommManager.recvMsg()
+
+                Exploration(exploredMaze, realMaze, robot, None, 3600, 300, realRun=True).runExploration()
+
+        printMenu()
+        choice = int(input("Enter your choice: "))
+
+
+def printMenu():
+    print()
+    print("1) Run simulated fastest path")
+    print("2) Run real fastest path")
+    print("3) Run simulated exploration")
+    print("4) Run real exploration")
+
+
+def fastestPathInit(arena, scoreMaze, maze):
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            if arena[i][j] == 1:
+                scoreMaze[ROW_SIZE - 1 - i][j] = 1
+            else:
+                scoreMaze[ROW_SIZE - 1 - i][j] = 0
+
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            if scoreMaze[i][j] == 1:
+                maze[i][j] = Cell(i, j, isObstacle=True)
+            else:
+                maze[i][j] = Cell(i, j, isObstacle=False)
+
+
+def explorationInit(scoreMaze, exploredMaze, arena, realMaze):
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            scoreMaze[i][j] = Color.UNEXPLORED.value
+    for dr in range(-1, 2):
+        for dc in range(-1, 2):
+            scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
+            scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
+
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            exploredMaze[i][j] = Cell(i, j)
+    for dr in range(-1, 2):
+        for dc in range(-1, 2):
+            exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
+            exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
+
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            if arena[i][j] == 1:
+                realMaze[i][j] = Cell(i, j, isObstacle=True)
+            else:
+                realMaze[i][j] = Cell(i, j, isObstacle=False)
 
 
 def printExploredMaze(exploredMaze):

@@ -1,9 +1,9 @@
 import socket
+from ..static.Constants import SPLITTER
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 8080  # Port to listen on
 BUFFER_SIZE = 4096
-SPLITTER = ":"
 
 
 class CommManager:
@@ -23,11 +23,14 @@ class CommManager:
 
     # dataArr: an array to hold data to send
     @classmethod
-    def sendMsg(cls, commandType, dataArr=None):
+    def sendMsg(cls, commandType, data=None):
         try:
             msg = commandType
-            if dataArr is not None:
-                for data in dataArr:
+            if data is not None:
+                if isinstance(data, list):
+                    for item in data:
+                        msg += SPLITTER + str(item)
+                else:
                     msg += SPLITTER + str(data)
             cls.client.send(str.encode(msg))
             print('Send msg:', msg)
@@ -41,5 +44,6 @@ class CommManager:
             if msg:
                 msg = msg.decode("utf-8")
             print('Receive msg:', msg)
+            return msg
         except socket.error as e:
             print("Error while receiving msg:" + str(e))

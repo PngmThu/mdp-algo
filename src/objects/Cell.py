@@ -6,4 +6,4 @@ class Cell:
         self.col = col
         self.isObstacle = isObstacle
         self.isExplored = False
-
+        self.canCalibrate = False

@@ -1,13 +1,13 @@
 from ..static.Action import Action
 from ..utils.Helper import Helper
 from ..static.Constants import ROW_SIZE, \
-    COL_SIZE, INF_COST, di, dj
+    COL_SIZE, INF_COST, di, dj, MAX_FOWARD
 
 
 class FastestPath:
 
     # Cell[][] maze, Robot robot
-    def __init__(self, maze, robot, destRow, destCol):
+    def __init__(self, maze, robot, destRow, destCol, realRun):
         self.maze = maze
         self.robot = robot
         self.curDir = robot.curDir
@@ -18,6 +18,7 @@ class FastestPath:
         self.gCosts = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
         self.destRow = destRow
         self.destCol = destCol
+        self.realRun = realRun
 
         # Initialize gCosts 2d array
         for i in range(ROW_SIZE):
@@ -64,7 +65,9 @@ class FastestPath:
                 # print fastest path
                 Helper.printPath(pathStack)
                 # execute path
-                return self.getActions(pathStack)
+                actions = self.getActions(pathStack)
+                self.executePath(actions)
+                return actions
 
             for t in range(4):
                 row = self.curCell.row + di[t]
@@ -117,3 +120,53 @@ class FastestPath:
             actions.append(Action.MOVE_FORWARD)
             cur = nextCell
         return actions
+
+    def executePath(self, actions):
+        if not self.realRun:
+            for action in actions:
+                self.robot.move(action, sendMsg=False)
+            return
+
+        fCount = 0
+        for action in actions:
+            if action == Action.MOVE_FORWARD:
+                fCount += 1
+                if fCount == MAX_FOWARD:
+                    self.robot.moveForwardMultiple(fCount)
+                    Helper.receiveActionComplete()
+                    fCount = 0
+            elif action == Action.TURN_RIGHT or action == Action.TURN_LEFT:
+                if fCount > 0:
+                    self.robot.moveForwardMultiple(fCount)
+                    Helper.receiveActionComplete()
+                    fCount = 0
+                self.robot.move(action, sendMsg=True)
+                Helper.receiveActionComplete()
+
+        if fCount > 0:
+            self.robot.moveForwardMultiple(fCount)
+            Helper.receiveActionComplete()
+
+    def canCalibrateAt(self, row, col, direction):
+        # 3 front sensors
+        dr = di[direction.value]
+        dc = dj[direction.value]
+        if dr != 0:
+            for j in range(-1, 2):
+                if not Helper.isValidCoordinates(self.maze[row + dr][col + j]) or self.maze[row + dr][col + j].isObstacle:
+                    return True
+        elif dc != 0:
+            for i in range(-1, 2):
+                if not Helper.isValidCoordinates(self.maze[row + i][col + dc]) or self.maze[row + i][col + dc].isObstacle:
+                    return True
+
+        # 1 right sensor
+        dr = di[Helper.nextDir(direction).value]
+        dc = dj[Helper.nextDir(direction).value]
+        if dr != 0:
+            if not Helper.isValidCoordinates(self.maze[row + dr][col + j]) or self.maze[row + dr][col + j].isObstacle:
+                return True
+        elif dc != 0:
+            for i in range(-1, 2):
+                if not Helper.isValidCoordinates(self.maze[row + i][col + dc]) or self.maze[row + i][col + dc].isObstacle:
+                    return True

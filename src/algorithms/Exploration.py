@@ -11,8 +11,8 @@ from ..utils.Helper import Helper
 # Inherit from ExplorationAlgo
 class Exploration(ExplorationAlgo):
 
-    def __init__(self, exploredMaze, realMaze, robot, simulator, timeLimit, coverageLimit):
-        super().__init__(exploredMaze, realMaze, robot, simulator, timeLimit)
+    def __init__(self, exploredMaze, realMaze, robot, simulator, timeLimit, coverageLimit, realRun):
+        super().__init__(exploredMaze, realMaze, robot, simulator, timeLimit, realRun)
         self.coverageLimit = coverageLimit
         self.backToStart = False
 
@@ -28,21 +28,23 @@ class Exploration(ExplorationAlgo):
         self.startTime = time.time()
         self.endTime = self.startTime + self.timeLimit
 
+        # TO DO: Initial Calibration
+
         self.senseAndRepaint()
 
-        self.executeNextMove()
-        # self.nextMove()
-        # exploredCount = self.calculateExploredCount()
-        # while exploredCount < self.coverageLimit and time.time() < self.endTime:
-        #     if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
-        #         break
-        #
-        #     self.nextMove()
-        #     exploredCount = self.calculateExploredCount()
+        # self.executeNextMove()
+        self.nextMove()
+        exploredCount = self.calculateExploredCount()
+        while exploredCount < self.coverageLimit and time.time() < self.endTime:
+            if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
+                break
+
+            self.nextMove()
+            exploredCount = self.calculateExploredCount()
 
         # TO DO: Continue exploring when there are unexplored areas although robot has returned to start zone
 
-        # self.goHome()
+        self.goHome()
 
     def executeNextMove(self):
         self.nextMove()
@@ -55,7 +57,7 @@ class Exploration(ExplorationAlgo):
             self.simulator.window.after(150, lambda: self.executeNextMove())
         else:
             self.printExploredMaze()
-            self.goHome()
+            self.goHomeSimulated()
 
     def calculateExploredCount(self):
         cnt = 0
@@ -66,16 +68,16 @@ class Exploration(ExplorationAlgo):
         print("Explored count:", cnt)
         return cnt
 
-    def goHome(self):
+    def goHomeSimulated(self):
         # Go to goal if never touched goal and then go back to start
         if not self.robot.touchedGoal and time.time() < self.endTime:
-            actions = FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL).runFastestPath()
+            actions = FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL, self.realRun).runFastestPath()
             # for action in actions:
             #     self.moveRobot(action)
             self.executeAction(actions, 0)
         else:
             # Go back start
-            actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL).runFastestPath()
+            actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
             self.backToStart = True
             self.executeAction(actions, 0)
             # for action in actions:
@@ -85,6 +87,20 @@ class Exploration(ExplorationAlgo):
             # exploredCount = self.calculateExploredCount()
             # print("Final explored count:", exploredCount)
             # print("Time:", time.time() - self.startTime, "seconds")
+
+        # TO DO: Calibrate to make sure that the robot is entirely inside start zone
+
+    def goHome(self):
+        # Go to goal if never touched goal and then go back to start
+        if not self.robot.touchedGoal and time.time() < self.endTime:
+            FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL, self.realRun).runFastestPath()
+        # Go back start
+        FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
+
+        print("Exploration complete!")
+        exploredCount = self.calculateExploredCount()
+        print("Final explored count:", exploredCount)
+        print("Time:", time.time() - self.startTime, "seconds")
 
         # TO DO: Calibrate to make sure that the robot is entirely inside start zone
 
@@ -132,7 +148,7 @@ class Exploration(ExplorationAlgo):
                 self.simulator.window.after(150, lambda: self.executeAction(actions, index + 1))
             else:
                 if not self.backToStart:
-                    actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL).runFastestPath()
+                    actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
                     self.backToStart = True
                     self.executeAction(actions, 0)
                 else:

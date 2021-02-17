@@ -59,3 +59,39 @@ class Sensor:
         # No obstacle is detected
         return -1
 
+    def processSensorVal(self, exploredMaze, sensorVal):
+        if sensorVal == 0:
+            return
+
+        dr = di[self.curDir.value]
+        dc = dj[self.curDir.value]
+
+        # If there is obstacle in the blind range of the sensor
+        # Return so as to not continue to check the upper range
+        if self.lowerRange > 1:
+            for dist in range(self.lowerRange):
+                row = self.curRow + dr * dist
+                col = self.curCol + dc * dist
+                # Boundary wall
+                if not Helper.isValidCoordinates(row, col):
+                    return
+                # Obstacle
+                if exploredMaze[row][col].isObstacle:
+                    return
+
+        # Check [lowerRange, upperRange]
+        for dist in range(self.lowerRange, self.upperRange + 1):
+            row = self.curRow + dr * dist
+            col = self.curCol + dc * dist
+
+            # Boundary wall
+            if not Helper.isValidCoordinates(row, col):
+                return
+
+            # Explored
+            exploredMaze[row][col].isExplored = True
+
+            # Explored cell is an obstacle
+            if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row,                                                                                             col):
+                exploredMaze[row][col].isObstacle = True
+                break

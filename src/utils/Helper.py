@@ -1,3 +1,5 @@
+from ..communication.CommManager import CommManager
+from ..communication.CommandType import CommandType
 from ..static.Constants import \
     GOAL_ROW, GOAL_COL, MOVE_COST, TURN_COST, ROW_SIZE, COL_SIZE, START_ROW, START_COL, di, dj
 from ..static.Direction import Direction
@@ -124,3 +126,9 @@ class Helper:
         if (col == -1 or col == COL_SIZE) and 0 <= row < ROW_SIZE:
             return True
         return False
+
+    @staticmethod
+    def receiveActionComplete():
+        msg = CommManager.recvMsg()
+        while msg != CommandType.ACTION_COMPLETE.value:
+            msg = CommManager.recvMsg()

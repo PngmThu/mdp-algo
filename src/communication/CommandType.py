@@ -1,5 +1,7 @@
 import enum
 
+from src.static.Action import Action
+
 
 class CommandType(enum.Enum):
 
@@ -7,13 +9,13 @@ class CommandType(enum.Enum):
     ROBOT_POS = "ROBOT_POS"
     MAP = "MAP"
     WAYPOINT = "WAYPOINT"
-    FINISH_FASTEST_PATH = "FINISH_FASTEST_PATH"
-    FINISH_EXPLORATION = "FINISH_EXPLORATION"
-    MOVE_FORWARD = "MOVE_FORWARD"
-    TURN_RIGHT = "TURN_RIGHT"
-    TURN_LEFT = "TURN_LEFT"
-    CALIBRATE = "CALIBRATE"
-    MOVE_FORWARD_MULTIPLE = "MOVE_FORWARD_MULTIPLE"
+    FINISH_FASTEST_PATH = "FINISH_FP"
+    FINISH_EXPLORATION = "FINISH_EX"
+    MOVE_FORWARD = Action.MOVE_FORWARD
+    TURN_RIGHT = Action.TURN_RIGHT
+    TURN_LEFT = Action.TURN_LEFT
+    CALIBRATE = Action.CALIBRATE
+    MOVE_FORWARD_MULTIPLE = "FM"
     CAPTURE = "CAPTURE"
 
     """ Receive """

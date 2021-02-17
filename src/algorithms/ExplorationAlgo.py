@@ -6,7 +6,7 @@ from ..utils.Helper import Helper
 
 class ExplorationAlgo:
 
-    def __init__(self, exploredMaze, realMaze, robot, simulator, timeLimit):
+    def __init__(self, exploredMaze, realMaze, robot, simulator, timeLimit, realRun):
         self.exploredMaze = exploredMaze
         self.realMaze = realMaze
         self.robot = robot
@@ -14,6 +14,7 @@ class ExplorationAlgo:
         self.startTime = None
         self.endTime = None
         self.simulator = simulator
+        self.realRun = realRun
 
     """
     Determines the next move for the robot and executes it accordingly.
@@ -37,7 +38,7 @@ class ExplorationAlgo:
     def moveRobot(self, action):
         if self.simulator is not None:
             self.simulator.updateRobotPos(action)
-        self.robot.move(action)
+        self.robot.move(action, sendMsg=self.realRun)
         self.senseAndRepaint()
 
     def senseAndRepaint(self):

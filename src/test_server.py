@@ -11,16 +11,31 @@ print("Server started...")
 print("Waiting for connection...")
 conn, addr = socket.accept()
 print(conn, addr)
+
+data = input("Enter your value: ")
+# data = data.replace("\n", "")
+print(data)
+conn.send(str.encode(data))
+
 while True:
+    # # Receive up to 4096 bytes from a peer
+    # data = conn.recv(4096)
+    # if not data:
+    #     break
+    # # print("Byte data:", data)
+    # print("Received data:", data.decode("utf-8"))
+
+    data = input("Enter your value: ")
+    # data = data.replace("\n", "")
+    print(data)
+    conn.send(str.encode(data))
+
     # Receive up to 4096 bytes from a peer
     data = conn.recv(4096)
     if not data:
         break
-    print("Byte data:", data)
-    print("Str data:", data.decode("utf-8"))
+    # print("Byte data:", data)
+    print("Received data:", data.decode("utf-8"))
 
-    # data = input("Enter your value: ")
-    # print(data)
-    # conn.send(str.encode(data))
 socket.close()
 print('client disconnected')
