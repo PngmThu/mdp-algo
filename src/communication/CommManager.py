@@ -33,6 +33,7 @@ class CommManager:
                         msg += SPLITTER + str(item)
                 else:
                     msg += SPLITTER + str(data)
+            msg += "\n"  # At \n to end the command
             cls.client.send(str.encode(msg))
             print('Send msg:', msg)
         except socket.error as e:

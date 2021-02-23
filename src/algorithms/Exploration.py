@@ -42,6 +42,26 @@ class Exploration(ExplorationAlgo):
             exploredCount = self.calculateExploredCount()
 
         # TO DO: Continue exploring when there are unexplored areas although robot has returned to start zone
+        exploredCount = self.calculateExploredCount()
+        while exploredCount < self.coverageLimit and time.time() < self.endTime:
+            row, col = self.findFirstUnexploredCell()
+            targetRow, targetCol = self.findNeighborOfUnexploredCell(row, col)
+            actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(execute=False)
+            for action in actions:
+                self.moveRobot(action)
+                # Break if the cell is explored when moving
+                if self.exploredMaze[row][col].isExplored:
+                    break
+            # Only turn when the cell is not explored when moving
+            if not self.exploredMaze[row][col].isExplored:
+                curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
+                targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir, self.exploredMaze[row][col])
+                while self.robot.curDir != targetDir:
+                    targetAction = Helper.getTargetTurn(self.robot.curDir, targetDir)
+                    self.moveRobot(targetAction)
+                    curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
+                    targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir, self.exploredMaze[row][col])
+            exploredCount = self.calculateExploredCount()
 
         self.goHome()
 
@@ -76,21 +96,20 @@ class Exploration(ExplorationAlgo):
         return -1
 
     def findNeighborOfUnexploredCell(self, row, col):
-        up_r, up_c = Helper.neighborOfUnexploredCellAt(row, col, Direction.UP)
-        down_r, down_c = Helper.neighborOfUnexploredCellAt(row, col, Direction.DOWN)
-        left_r, left_c = Helper.neighborOfUnexploredCellAt(row, col, Direction.LEFT)
-        right_r, right_c = Helper.neighborOfUnexploredCellAt(row, col, Direction.RIGHT)
-
-        if self.canVisit(down_r, down_c):
-            return down_r, down_c
-        elif self.canVisit(left_r, left_c):
-            return left_r, left_c
-        elif self.canVisit(up_r, up_c):
-            return up_r, up_c
-        elif self.canVisit(right_r, right_c):
-            return right_r, right_c
-        else:
-            return -1
+        direction = Direction.DOWN
+        for i in range(4):
+            r, c = Helper.neighborOfUnexploredCellAt(row, col, direction)
+            print(r, c)
+            if direction == Direction.UP or direction == Direction.DOWN:
+                for dc in range(-1, 2):
+                    if self.canVisit(r, c + dc):
+                        return r, c + dc
+            else:
+                for dr in range(-1, 2):
+                    if self.canVisit(r + dr, c):
+                        return r + dr, c
+            direction = Helper.nextDir(direction)
+        return -1
 
     def printExploredMaze(self):
         for i in range(ROW_SIZE):

@@ -132,3 +132,28 @@ class Helper:
         msg = CommManager.recvMsg()
         while msg != CommandType.ACTION_COMPLETE.value:
             msg = CommManager.recvMsg()
+
+    @staticmethod
+    def actionToCmd(action):
+        if action == Action.MOVE_FORWARD:
+            return CommandType.MOVE_FORWARD
+        elif action == Action.TURN_RIGHT:
+            return CommandType.TURN_RIGHT
+        elif action == Action.TURN_LEFT:
+            return CommandType.TURN_LEFT
+        elif action == Action.CALIBRATE:
+            return CommandType.CALIBRATE
+
+    @staticmethod
+    def getTargetDirForUnexplored(curCell, curDir, targetCell):
+        if (curCell.col - targetCell.col) > 1:
+            return Direction.LEFT
+        elif (targetCell.col - curCell.col) > 1:
+            return Direction.RIGHT
+        else:
+            if (curCell.row - targetCell.row) > 1:
+                return Direction.DOWN
+            elif (targetCell.row - curCell.row) > 1:
+                return Direction.UP
+            else:
+                return curDir

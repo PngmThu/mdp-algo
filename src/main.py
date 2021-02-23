@@ -11,6 +11,7 @@ from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_R
 from src.static.Direction import Direction
 from src.utils.Helper import Helper
 from src.algorithms.FastestPath import FastestPath
+from src.utils.MapDescriptor import MapDescriptor
 from src.utils.Simulator import Simulator
 
 fastestPathDone = False
@@ -32,9 +33,11 @@ def loadArena():
 def main():
     """ Test CommManager """
     # CommManager.connect()
-    #
-    # # Need to use mutex to make sure that 2 commands are well-received
-    # CommManager.sendMsg("COMMAND_TYPE", ["abc", "xyz"])
+
+    # Need to use mutex to make sure that 2 commands are well-received
+    # CommManager.sendMsg("AI|DoSomething1\nAI|DoSomething2\n")
+    # CommManager.sendMsg("AI|DoSomething2\n")
+    # CommManager.sendMsg("AI|DoSomething3\n")
     # # time.sleep(1) # sleep 1s
     # CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
     #
@@ -47,12 +50,17 @@ def main():
     printMenu()
     choice = int(input("Enter your choice: "))
     while 1 <= choice <= 6:
-        arena = loadArena()
+        loadChoice = input("Load maze from map descriptor P2? (Y/N): ")
+        if loadChoice == "Y":
+            hexP2 = input("Enter map descriptor P2: ")
+            maze = loadMazeFromMapDescriptorP2(hexP2)
+        else:
+            maze = loadMazeFromArenaFile()
+
         # Fastest Path
         if choice == 1 or choice == 2:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            fastestPathInit(arena, scoreMaze, maze)
+            fastestPathInit(maze, scoreMaze)
 
             if choice == 1:
                 realRun = False
@@ -79,8 +87,7 @@ def main():
         elif choice == 3 or choice == 4:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            explorationInit(scoreMaze, exploredMaze, arena, realMaze)
+            explorationInit(scoreMaze, exploredMaze)
 
             if choice == 3:
                 realRun = False
@@ -98,7 +105,7 @@ def main():
 
             # Start exploration in a new thread
             EXThread = Thread(
-                target=lambda: Exploration(exploredMaze, realMaze, robot, simulator, 3600, 300,
+                target=lambda: Exploration(exploredMaze, maze, robot, simulator, 3600, 300,
                                            realRun).runExploration(),
                 daemon=True)
             EXThread.start()
@@ -108,8 +115,8 @@ def main():
         elif choice == 5 or choice == 6:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            realMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            explorationInit(scoreMaze, exploredMaze, arena, realMaze)
+            maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+            explorationInit(scoreMaze, exploredMaze, arena, maze)
             realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
                           (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
                           (13, 1, Direction.UP)}
@@ -131,7 +138,7 @@ def main():
 
             # Start image finding in a new thread
             IFThread = Thread(
-                target=lambda: ImageFinding(exploredMaze, realMaze, robot,
+                target=lambda: ImageFinding(exploredMaze, maze, robot,
                                             simulator, 3600, realRun, realImages).runImageFinding(),
                 daemon=True)
             IFThread.start()
@@ -152,30 +159,19 @@ def printMenu():
     print("6) Run real image finding")
 
 
-def fastestPathInit(arena, scoreMaze, maze):
+def fastestPathInit(maze, scoreMaze):
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
-            if arena[i][j] == 1:
-                scoreMaze[ROW_SIZE - 1 - i][j] = 1
+            if maze[i][j].isObstacle:
+                scoreMaze[i][j] = Color.OBSTACLE.value
             else:
-                scoreMaze[ROW_SIZE - 1 - i][j] = 0
-
-    for i in range(ROW_SIZE):
-        for j in range(COL_SIZE):
-            if scoreMaze[i][j] == 1:
-                maze[i][j] = Cell(i, j, isObstacle=True)
-            else:
-                maze[i][j] = Cell(i, j, isObstacle=False)
+                scoreMaze[i][j] = Color.EMPTY_CELL.value
 
 
-def explorationInit(scoreMaze, exploredMaze, arena, realMaze):
+def explorationInit(scoreMaze, exploredMaze):
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
             scoreMaze[i][j] = Color.UNEXPLORED.value
-    for dr in range(-1, 2):
-        for dc in range(-1, 2):
-            scoreMaze[START_ROW + dr][START_COL + dc] = Color.START_ZONE.value
-            scoreMaze[GOAL_ROW + dr][GOAL_COL + dc] = Color.GOAL_ZONE.value
 
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
@@ -185,12 +181,35 @@ def explorationInit(scoreMaze, exploredMaze, arena, realMaze):
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
 
+
+def loadMazeFromMapDescriptorP2(hexP2):
+    return MapDescriptor.convertToMaze(hexP2)
+
+
+def loadMazeFromArenaFile():
+    arena = loadArena()
+    maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
     for i in range(ROW_SIZE):
         for j in range(COL_SIZE):
             if arena[i][j] == 1:
-                realMaze[ROW_SIZE - 1 - i][j] = Cell(i, j, isObstacle=True)
+                maze[ROW_SIZE - 1 - i][j] = Cell(ROW_SIZE - 1 - i, j, isObstacle=True)
             else:
-                realMaze[ROW_SIZE - 1 - i][j] = Cell(i, j, isObstacle=False)
+                maze[ROW_SIZE - 1 - i][j] = Cell(ROW_SIZE - 1 - i, j, isObstacle=False)
+            maze[ROW_SIZE - 1 - i][j].isExplored = True
+    return maze
+
+
+def printMaze(maze):
+    for i in range(ROW_SIZE):
+        for j in range(COL_SIZE):
+            if maze[ROW_SIZE - 1 - i][j].isExplored:
+                if maze[ROW_SIZE - 1 - i][j].isObstacle:
+                    print("1", end=" ")
+                else:
+                    print("0", end=" ")
+            else:
+                print("X", end=" ")
+        print()
 
 
 # Press the green button in the gutter to run the script.

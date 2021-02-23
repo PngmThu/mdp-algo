@@ -42,7 +42,7 @@ class FastestPath:
 
         return cellResult
 
-    def runFastestPath(self):
+    def runFastestPath(self, execute=True):
         print("Calculating fastest path from (" + str(self.curCell.row) + ", "
               + str(self.curCell.col) + ") to goal (" + str(self.destRow) + ", " + str(self.destCol) + ")...")
 
@@ -66,7 +66,8 @@ class FastestPath:
                 Helper.printPath(pathStack)
                 # execute path
                 actions = self.getActions(pathStack)
-                self.executePath(actions)
+                if execute:
+                    self.executePath(actions)
                 return actions
 
             for t in range(4):
@@ -91,7 +92,7 @@ class FastestPath:
         if 0 < row < ROW_SIZE - 1 and 0 < col < COL_SIZE - 1:
             for dr in range(-1, 2):
                 for dc in range(-1, 2):
-                    if self.maze[row + dr][col + dc].isObstacle:
+                    if not self.maze[row + dr][col + dc].isExplored or self.maze[row + dr][col + dc].isObstacle:
                         return False
             return True
         else:

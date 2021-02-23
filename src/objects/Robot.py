@@ -10,6 +10,7 @@ from ..static.Constants import di, dj, SR_SENSOR_LOWER, SR_SENSOR_UPPER, \
     LR_SENSOR_LOWER, LR_SENSOR_UPPER, offsetRow, offsetCol, GOAL_ROW, GOAL_COL, START_DIR, SPLITTER
 from ..static.RelativePos import RelativePos
 from ..utils.Helper import Helper
+from ..utils.MapDescriptor import MapDescriptor
 
 """
  * The robot is represented by a 3 x 3 cell space as below:
@@ -136,7 +137,9 @@ class Robot:
             self.SRLeft.processSensorVal(exploredMaze, result[4])
             self.LRLeft.processSensorVal(exploredMaze, result[5])
 
-            # TO DO: Send map descriptor to android
+            # Send map descriptor to android
+            data = [MapDescriptor.generateP1(exploredMaze), MapDescriptor.generateP2(exploredMaze)]
+            CommManager.sendMsg(CommandType.MAP, data)
         return result
 
     def updateCameraPos(self):
@@ -156,10 +159,9 @@ class Robot:
 
     def sendAction(self, action):
         # Send action to arduino
-        # print("Send action!!!")
-        CommManager.sendMsg(action.value)
+        CommManager.sendMsg(Helper.actionToCmd(action))
         if action != Action.CALIBRATE:
-            # Send robot position to android
+            # Send robot position and map descriptor to android
             data = [self.curRow, self.curCol, self.curDir.value]
             CommManager.sendMsg(CommandType.ROBOT_POS.value, data)
 

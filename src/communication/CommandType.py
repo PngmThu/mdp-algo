@@ -1,22 +1,30 @@
 import enum
 
-from src.static.Action import Action
-
 
 class CommandType(enum.Enum):
 
-    """ Send """
-    ROBOT_POS = "ROBOT_POS"
-    MAP = "MAP"
-    WAYPOINT = "WAYPOINT"
-    FINISH_FASTEST_PATH = "FINISH_FP"
-    FINISH_EXPLORATION = "FINISH_EX"
-    MOVE_FORWARD = Action.MOVE_FORWARD
-    TURN_RIGHT = Action.TURN_RIGHT
-    TURN_LEFT = Action.TURN_LEFT
-    CALIBRATE = Action.CALIBRATE
-    MOVE_FORWARD_MULTIPLE = "FM"
-    CAPTURE = "CAPTURE"
+    """
+    Send:
+        P – Algo PC
+        I – Image Recognition
+        R – Arduino
+        A – Android
+    """
+    # To android
+    ROBOT_POS = "A|ROBOT_POS"
+    MAP = "A|MAP"
+    WAYPOINT = "A|WAYPOINT"
+    FINISH_FASTEST_PATH = "A|FINISH_FP"
+    # To android and arduino
+    FINISH_EXPLORATION = "RA|FINISH_EX"
+    # To arduino
+    MOVE_FORWARD = "R|F"
+    TURN_RIGHT = "R|R"
+    TURN_LEFT = "R|L"
+    CALIBRATE = "R|C"
+    MOVE_FORWARD_MULTIPLE = "R|FM"
+    # To image recognition
+    CAPTURE = "I|CAPTURE"
 
     """ Receive """
     # From image recognition
