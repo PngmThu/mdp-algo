@@ -7,7 +7,7 @@ from ..static.Direction import Direction
 from ..static.Action import Action
 from ..objects.Sensor import Sensor
 from ..static.Constants import di, dj, SR_SENSOR_LOWER, SR_SENSOR_UPPER, \
-    LR_SENSOR_LOWER, LR_SENSOR_UPPER, offsetRow, offsetCol, GOAL_ROW, GOAL_COL, START_DIR, SPLITTER
+    LR_SENSOR_LOWER, LR_SENSOR_UPPER, offsetRow, offsetCol, GOAL_ROW, GOAL_COL, START_DIR, SPLITTER, SPEED
 from ..static.RelativePos import RelativePos
 from ..utils.Helper import Helper
 from ..utils.MapDescriptor import MapDescriptor
@@ -35,6 +35,7 @@ class Robot:
         self.touchedGoal = False
         self.realRun = realRun
         self.simulator = None
+        self.speed = SPEED
 
         self.SRFrontLeft = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFL")
         self.SRFrontCenter = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFC")
@@ -54,6 +55,9 @@ class Robot:
 
     def setSimulator(self, simulator):
         self.simulator = simulator
+
+    def setSpeed(self, speed):
+        self.speed = speed
 
     def move(self, action, sendMsg):
         self.updateSimulator(action)
@@ -180,5 +184,5 @@ class Robot:
 
     def updateSimulator(self, action):
         if self.simulator is not None:
-            time.sleep(0.1)  # sleep 100ms
+            time.sleep(self.speed)  # in seconds
             self.simulator.updateRobotPos(action)

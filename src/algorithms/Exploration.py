@@ -41,7 +41,11 @@ class Exploration(ExplorationAlgo):
             self.nextMove()
             exploredCount = self.calculateExploredCount()
 
-        # TO DO: Continue exploring when there are unexplored areas although robot has returned to start zone
+        # If exceed time limit, terminate
+        if time.time() >= self.endTime:
+            return
+
+        # Continue exploring when there are unexplored areas although robot has returned to start zone
         exploredCount = self.calculateExploredCount()
         while exploredCount < self.coverageLimit and time.time() < self.endTime:
             row, col = self.findFirstUnexploredCell()

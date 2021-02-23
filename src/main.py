@@ -7,7 +7,7 @@ from src.communication.CommandType import CommandType
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
-from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL
+from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL, SPEED
 from src.static.Direction import Direction
 from src.utils.Helper import Helper
 from src.algorithms.FastestPath import FastestPath
@@ -89,13 +89,21 @@ def main():
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             explorationInit(scoreMaze, exploredMaze)
 
+            timeLimit = 3600
+            coverageLimit = 300
+            speed = SPEED
             if choice == 3:
                 realRun = False
+                speed = float(input("Enter robot's speed (s): "))
+                timeLimit = int(input("Enter time limit: "))
+                coveragePercentage = int(input("Enter coverage percentage (%): "))
+                coverageLimit = ROW_SIZE * COL_SIZE * coveragePercentage / 100
             else:
                 realRun = True
             robot = Robot(START_ROW, START_COL, realRun)
             simulator = Simulator(scoreMaze, robot)
             robot.setSimulator(simulator)
+            robot.setSpeed(speed)
 
             if choice == 4:
                 CommManager.connect()
@@ -105,7 +113,7 @@ def main():
 
             # Start exploration in a new thread
             EXThread = Thread(
-                target=lambda: Exploration(exploredMaze, maze, robot, simulator, 3600, 300,
+                target=lambda: Exploration(exploredMaze, maze, robot, simulator, timeLimit, coverageLimit,
                                            realRun).runExploration(),
                 daemon=True)
             EXThread.start()
@@ -116,7 +124,7 @@ def main():
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            explorationInit(scoreMaze, exploredMaze, arena, maze)
+            explorationInit(scoreMaze, exploredMaze)
             realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
                           (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
                           (13, 1, Direction.UP)}

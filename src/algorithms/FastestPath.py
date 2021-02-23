@@ -1,7 +1,7 @@
 from ..static.Action import Action
 from ..utils.Helper import Helper
 from ..static.Constants import ROW_SIZE, \
-    COL_SIZE, INF_COST, di, dj, MAX_FOWARD
+    COL_SIZE, INF_COST, di, dj, MAX_FORWARD
 
 
 class FastestPath:
@@ -132,7 +132,7 @@ class FastestPath:
         for action in actions:
             if action == Action.MOVE_FORWARD:
                 fCount += 1
-                if fCount == MAX_FOWARD:
+                if fCount == MAX_FORWARD:
                     self.robot.moveForwardMultiple(fCount)
                     Helper.receiveActionComplete()
                     fCount = 0
