@@ -97,10 +97,6 @@ def main():
             speed = SPEED
             if choice == 3:
                 realRun = False
-                speed = float(input("Enter robot's speed (s): "))
-                timeLimit = int(input("Enter time limit: "))
-                coveragePercentage = int(input("Enter coverage percentage (%): "))
-                coverageLimit = ROW_SIZE * COL_SIZE * coveragePercentage / 100
             else:
                 realRun = True
             robot = Robot(START_ROW, START_COL, realRun)

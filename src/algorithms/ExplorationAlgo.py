@@ -18,17 +18,17 @@ class ExplorationAlgo:
 
     """
     Determines the next move for the robot and executes it accordingly.
-    For right hugging, look right first to always have obstacle at the right side
+    For left hugging, look left first to always have obstacle at the right side
     """
     def nextMove(self):
-        if self.lookRight():
-            self.moveRobot(Action.TURN_RIGHT)
+        if self.lookLeft():
+            self.moveRobot(Action.TURN_LEFT)
             if self.lookForward():
                 self.moveRobot(Action.MOVE_FORWARD)
         elif self.lookForward():
             self.moveRobot(Action.MOVE_FORWARD)
-        elif self.lookLeft():
-            self.moveRobot(Action.TURN_LEFT)
+        elif self.lookRight():
+            self.moveRobot(Action.TURN_RIGHT)
             if self.lookForward():
                 self.moveRobot(Action.MOVE_FORWARD)
         else:
@@ -45,7 +45,7 @@ class ExplorationAlgo:
         self.robot.updateSensorsPos()
         sensorResults = self.robot.sense(self.exploredMaze, self.realMaze)
         sensors = [self.robot.SRFrontLeft, self.robot.SRFrontCenter, self.robot.SRFrontRight,
-                   self.robot.SRRight, self.robot.SRLeft, self.robot.LRLeft]
+                   self.robot.SRLeftHead, self.robot.SRLeftTail, self.robot.LRRight]
         if self.simulator is None:
             return
         # Repaint in simulator

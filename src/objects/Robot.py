@@ -17,10 +17,9 @@ from ..utils.MapDescriptor import MapDescriptor
  *
  *          ^   ^   ^
  *         SR  SR  SR
- *       < SR
- *        [X] [X] [X] SR >
- *   < LR [X] [X] [X] 
- *        [X] [X] [X]
+ *   < SR [X] [X] [X] LR >
+ *        [X] [X] [X] 
+ *   < SR [X] [X] [X] 
  *
  * SR = Short Range Sensor, LR = Long Range Sensor
 """
@@ -40,14 +39,14 @@ class Robot:
         self.SRFrontLeft = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFL")
         self.SRFrontCenter = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFC")
         self.SRFrontRight = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRFR")
-        self.SRRight = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRR")
-        self.SRLeft = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRL")
-        self.LRLeft = Sensor(LR_SENSOR_LOWER, LR_SENSOR_UPPER, "LRL")
+        self.SRLeftHead = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRLH")
+        self.SRLeftTail = Sensor(SR_SENSOR_LOWER, SR_SENSOR_UPPER, "SRLT")
+        self.LRRight = Sensor(LR_SENSOR_LOWER, LR_SENSOR_UPPER, "LRR")
 
         self.updateSensorsPos()
 
         # Camera is placed to capture left side of the robot
-        self.camera = Camera(row, col, Helper.previousDir(START_DIR))
+        self.camera = Camera(row, col, Helper.nextDir(START_DIR))
 
     def setRobotPos(self, row, col):
         self.curRow = row
@@ -95,15 +94,15 @@ class Robot:
         self.SRFrontRight.setPos(self.curRow + offsetRow[(RelativePos.TOP_RIGHT.value + self.curDir.value * 2) % 8],
                                  self.curCol + offsetCol[(RelativePos.TOP_RIGHT.value + self.curDir.value * 2) % 8],
                                  self.curDir)
-        self.SRRight.setPos(self.curRow + offsetRow[(RelativePos.TOP_RIGHT.value + self.curDir.value * 2) % 8],
+        self.SRLeftHead.setPos(self.curRow + offsetRow[(RelativePos.TOP_LEFT.value + self.curDir.value * 2) % 8],
+                               self.curCol + offsetCol[(RelativePos.TOP_LEFT.value + self.curDir.value * 2) % 8],
+                               Helper.previousDir(self.curDir))
+        self.SRLeftTail.setPos(self.curRow + offsetRow[(RelativePos.BOTTOM_LEFT.value + self.curDir.value * 2) % 8],
+                               self.curCol + offsetCol[(RelativePos.BOTTOM_LEFT.value + self.curDir.value * 2) % 8],
+                               Helper.previousDir(self.curDir))
+        self.LRRight.setPos(self.curRow + offsetRow[(RelativePos.TOP_RIGHT.value + self.curDir.value * 2) % 8],
                             self.curCol + offsetCol[(RelativePos.TOP_RIGHT.value + self.curDir.value * 2) % 8],
                             Helper.nextDir(self.curDir))
-        self.SRLeft.setPos(self.curRow + offsetRow[(RelativePos.TOP_LEFT.value + self.curDir.value * 2) % 8],
-                           self.curCol + offsetCol[(RelativePos.TOP_LEFT.value + self.curDir.value * 2) % 8],
-                           Helper.previousDir(self.curDir))
-        self.LRLeft.setPos(self.curRow + offsetRow[(RelativePos.LEFT.value + self.curDir.value * 2) % 8],
-                           self.curCol + offsetCol[(RelativePos.LEFT.value + self.curDir.value * 2) % 8],
-                           Helper.previousDir(self.curDir))
 
     """
     Calls the .sense() method of all the attached sensors and stores the received values in an integer array.
@@ -112,8 +111,8 @@ class Robot:
     def sense(self, exploredMaze, realMaze):
         if not self.realRun:
             result = [self.SRFrontLeft.sense(exploredMaze, realMaze), self.SRFrontCenter.sense(exploredMaze, realMaze),
-                      self.SRFrontRight.sense(exploredMaze, realMaze), self.SRRight.sense(exploredMaze, realMaze),
-                      self.SRLeft.sense(exploredMaze, realMaze), self.LRLeft.sense(exploredMaze, realMaze)]
+                      self.SRFrontRight.sense(exploredMaze, realMaze), self.SRLeftHead.sense(exploredMaze, realMaze),
+                      self.SRLeftTail.sense(exploredMaze, realMaze), self.LRRight.sense(exploredMaze, realMaze)]
             # print("P1:", MapDescriptor.generateP1(exploredMaze))
             # print("P2: ", MapDescriptor.generateP2(exploredMaze))
             return result
@@ -139,9 +138,9 @@ class Robot:
             self.SRFrontLeft.processSensorVal(exploredMaze, result[0])
             self.SRFrontCenter.processSensorVal(exploredMaze, result[1])
             self.SRFrontRight.processSensorVal(exploredMaze, result[2])
-            self.SRRight.processSensorVal(exploredMaze, result[3])
-            self.SRLeft.processSensorVal(exploredMaze, result[4])
-            self.LRLeft.processSensorVal(exploredMaze, result[5])
+            self.SRLeftHead.processSensorVal(exploredMaze, result[3])
+            self.SRLeftTail.processSensorVal(exploredMaze, result[4])
+            self.LRRight.processSensorVal(exploredMaze, result[5])
 
             # Send map descriptor to android
             data = [MapDescriptor.generateP1(exploredMaze), MapDescriptor.generateP2(exploredMaze)]
@@ -149,7 +148,7 @@ class Robot:
         return result
 
     def updateCameraPos(self):
-        self.camera.setPos(self.curRow, self.curCol, Helper.previousDir(self.curDir))
+        self.camera.setPos(self.curRow, self.curCol, Helper.nextDir(self.curDir))
 
     def captureImage(self, exploredImages, realImages, realMaze):
         if not self.realRun:
