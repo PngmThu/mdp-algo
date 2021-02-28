@@ -1,5 +1,7 @@
 from ..communication.CommandType import CommandType
+from ..objects.Robot import Robot
 from ..static.Action import Action
+from ..static.CalibrationStatus import CalibrationStatus
 from ..utils.Helper import Helper
 from ..static.Constants import ROW_SIZE, \
     COL_SIZE, INF_COST, di, dj, MAX_FORWARD
@@ -67,9 +69,11 @@ class FastestPath:
                 Helper.printPath(pathStack)
                 # execute path
                 actions = self.getActions(pathStack)
+                # Calibration
+                actionsWithCalibrate = self.getActionsWithCalibrate(actions)
                 if execute:
-                    self.executePath(actions)
-                return actions
+                    self.executePath(actionsWithCalibrate)
+                return actionsWithCalibrate
 
             for t in range(4):
                 row = self.curCell.row + di[t]
@@ -78,11 +82,14 @@ class FastestPath:
                     nextCell = self.maze[row][col]
                     if nextCell not in self.candidateCells:
                         self.parentDict[nextCell] = self.curCell
-                        self.gCosts[row][col] = self.gCosts[self.curCell.row][self.curCell.col] + Helper.computeCostG(self.curCell, nextCell, self.curDir)
+                        self.gCosts[row][col] = self.gCosts[self.curCell.row][self.curCell.col] + Helper.computeCostG(
+                            self.curCell, nextCell, self.curDir)
                         self.candidateCells.add(nextCell)
                     else:
                         currentGCost = self.gCosts[row][col]
-                        newGCost = self.gCosts[self.curCell.row][self.curCell.col] + Helper.computeCostG(self.curCell, nextCell, self.curDir)
+                        newGCost = self.gCosts[self.curCell.row][self.curCell.col] + Helper.computeCostG(self.curCell,
+                                                                                                         nextCell,
+                                                                                                         self.curDir)
                         if newGCost < currentGCost:
                             self.gCosts[row][col] = newGCost
                             self.parentDict[nextCell] = self.curCell
@@ -137,7 +144,7 @@ class FastestPath:
                     self.robot.moveForwardMultiple(fCount)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     fCount = 0
-            elif action == Action.TURN_RIGHT or action == Action.TURN_LEFT:
+            else:
                 if fCount > 0:
                     self.robot.moveForwardMultiple(fCount)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
@@ -149,16 +156,88 @@ class FastestPath:
             self.robot.moveForwardMultiple(fCount)
             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
 
-    # TO DO: find cell that can stop to calibrate
+    # Check whether exist 2 obstacles at the direction
     def canCalibrateAt(self, row, col, direction):
-        # 3 front sensors
         dr = di[direction.value]
         dc = dj[direction.value]
         if dr != 0:
+            cnt = 0
             for j in range(-1, 2):
-                if not Helper.isValidCoordinates(self.maze[row + dr][col + j]) or self.maze[row + dr][col + j].isObstacle:
-                    return True
+                if Helper.isBoundary(row + 2 * dr, col + j) or (
+                        Helper.isValidCoordinates(row + 2 * dr, col + j) and self.maze[row + 2 * dr][col + j].isExplored and
+                        self.maze[row + 2 * dr][col + j].isObstacle):
+                    cnt += 1
+            # print("cnt:", cnt)
+            if cnt >= 2:
+                return True
         elif dc != 0:
+            cnt = 0
             for i in range(-1, 2):
-                if not Helper.isValidCoordinates(self.maze[row + i][col + dc]) or self.maze[row + i][col + dc].isObstacle:
-                    return True
+                if Helper.isBoundary(row + i, col + 2 * dc) or (
+                        Helper.isValidCoordinates(row + i, col + 2 * dc) and self.maze[row + i][col + 2 * dc].isExplored and
+                        self.maze[row + i][col + 2 * dc].isObstacle):
+                    cnt += 1
+            # print("cnt:", cnt)
+            if cnt >= 2:
+                return True
+        return False
+
+    def getCalibrationStatus(self, actions):
+        tempRobot = Robot(self.robot.curRow, self.robot.curCol, realRun=False)
+        tempRobot.setRobotDir(self.robot.curDir)
+        statusArr = []
+        for action in actions:
+            # print(tempRobot.curRow, tempRobot.curCol, tempRobot.curDir)
+            if action == Action.TURN_RIGHT or action == Action.TURN_LEFT:
+                if self.canCalibrateAt(tempRobot.curRow, tempRobot.curCol, tempRobot.curDir):
+                    statusArr.append(CalibrationStatus.AUTO_CALIBRATE)
+                else:
+                    statusArr.append(CalibrationStatus.CANNOT_CALIBRATE)
+                tempRobot.move(action, sendMsg=False, printAction=False)
+            else:
+                tempRobot.move(action, sendMsg=False, printAction=False)
+                # print(tempRobot.curRow, tempRobot.curCol, tempRobot.curDir)
+                # If can do front calibrate or left calibrate
+                if self.canCalibrateAt(tempRobot.curRow, tempRobot.curCol, tempRobot.curDir) or self.canCalibrateAt(
+                        tempRobot.curRow, tempRobot.curCol, Helper.previousDir(tempRobot.curDir)):
+                    statusArr.append(CalibrationStatus.FULL_CALIBRATE)
+                elif self.canCalibrateAt(tempRobot.curRow, tempRobot.curCol,
+                                         Helper.nextDir(tempRobot.curDir)):  # If can do right calibrate
+                    statusArr.append(CalibrationStatus.RIGHT_CALIBRATE)
+                else:
+                    statusArr.append(CalibrationStatus.CANNOT_CALIBRATE)
+        # print("Initial statusArr:", statusArr)
+
+        # Process to remove unnecessary calibration
+        first = -1
+        second = -1
+        window = 3
+        i = 0
+        while i < len(statusArr):
+            # print("i:", i)
+            for j in range(window):
+                if i + j < len(statusArr) and statusArr[i + j] != CalibrationStatus.CANNOT_CALIBRATE:
+                    second = i + j
+                    if i + j - first > window:  # If the last window have no calibration -> take the first one
+                        break
+            # print("first", first, "second", second)
+            for t in range(i, second):
+                statusArr[t] = CalibrationStatus.CANNOT_CALIBRATE
+            if second != first:  # If found a calibration
+                i = second + 1
+            else:
+                i += window
+            first = second
+        # print("Processed statusArr:", statusArr)
+        return statusArr
+
+    def getActionsWithCalibrate(self, actions):
+        actionsWithCalibrate = []
+        statusArr = self.getCalibrationStatus(actions)
+        for i in range(len(actions)):
+            actionsWithCalibrate.append(actions[i])
+            if statusArr[i] == CalibrationStatus.FULL_CALIBRATE:
+                actionsWithCalibrate.append(Action.CALIBRATE)
+            elif statusArr[i] == CalibrationStatus.RIGHT_CALIBRATE:
+                actionsWithCalibrate.append(Action.RIGHT_CALIBRATE)
+        return actionsWithCalibrate

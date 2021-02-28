@@ -7,3 +7,4 @@ class Action(enum.Enum):
     TURN_LEFT = 'L'
     TURN_RIGHT = 'R'
     CALIBRATE = 'C'
+    RIGHT_CALIBRATE = 'RC'

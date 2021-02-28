@@ -52,13 +52,16 @@ class Robot:
         self.curRow = row
         self.curCol = col
 
+    def setRobotDir(self, direction):
+        self.curDir = direction
+
     def setSimulator(self, simulator):
         self.simulator = simulator
 
     def setSpeed(self, speed):
         self.speed = speed
 
-    def move(self, action, sendMsg):
+    def move(self, action, sendMsg, printAction=True):
         self.updateSimulator(action)
 
         if action == Action.MOVE_FORWARD:
@@ -74,7 +77,8 @@ class Robot:
 
         self.updateTouchedGoal()
 
-        print(action.name)
+        if printAction:
+            print(action.name)
 
         if self.realRun:
             # Send action to arduino

@@ -165,6 +165,8 @@ class Helper:
             return CommandType.TURN_LEFT
         elif action == Action.CALIBRATE:
             return CommandType.CALIBRATE
+        elif action == Action.RIGHT_CALIBRATE:
+            return CommandType.RIGHT_CALIBRATE
 
     @staticmethod
     def sendAction(action):
