@@ -37,7 +37,10 @@ def main():
     # Need to use mutex to make sure that 2 commands are well-received
     # CommManager.sendMsg("AI|DoSomething1\nAI|DoSomething2\n")
     # CommManager.sendMsg("AI|DoSomething2\n")
-    # CommManager.sendMsg("AI|DoSomething3\n")
+    # CommManager.sendMsg("I|DoSomething\n")
+    # while True:
+    #     msg = input("Enter a msg: ")
+    #     CommManager.sendMsg(msg)
     # # time.sleep(1) # sleep 1s
     # CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
     #
@@ -74,7 +77,7 @@ def main():
             if choice == 2:
                 CommManager.connect()
                 msg = CommManager.recvMsg()
-                while msg != CommandType.FP_START.value:
+                while not msg.startswith(CommandType.FP_START.value):
                     msg = CommManager.recvMsg()
             # Start fastest path in a new thread
             FPthread = Thread(
@@ -123,7 +126,6 @@ def main():
         elif choice == 5 or choice == 6:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
-            maze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             explorationInit(scoreMaze, exploredMaze)
             realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
                           (10, 10, Direction.RIGHT), (14, 12, Direction.UP),

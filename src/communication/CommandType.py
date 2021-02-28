@@ -22,7 +22,7 @@ class CommandType(enum.Enum):
     TURN_RIGHT = "R|R"
     TURN_LEFT = "R|L"
     CALIBRATE = "R|C"
-    MOVE_FORWARD_MULTIPLE = "R|FM"
+    MOVE_FORWARD_MULTIPLE = "R|F"
     # To image recognition
     CAPTURE = "I|CAPTURE"
 

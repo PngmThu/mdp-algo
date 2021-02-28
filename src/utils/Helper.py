@@ -130,7 +130,7 @@ class Helper:
     @staticmethod
     def receiveActionComplete():
         msg = CommManager.recvMsg()
-        while msg != CommandType.ACTION_COMPLETE.value:
+        while not msg.startswith(CommandType.ACTION_COMPLETE.value):
             msg = CommManager.recvMsg()
 
     @staticmethod

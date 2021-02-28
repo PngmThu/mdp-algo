@@ -114,6 +114,8 @@ class Robot:
             result = [self.SRFrontLeft.sense(exploredMaze, realMaze), self.SRFrontCenter.sense(exploredMaze, realMaze),
                       self.SRFrontRight.sense(exploredMaze, realMaze), self.SRRight.sense(exploredMaze, realMaze),
                       self.SRLeft.sense(exploredMaze, realMaze), self.LRLeft.sense(exploredMaze, realMaze)]
+            # print("P1:", MapDescriptor.generateP1(exploredMaze))
+            # print("P2: ", MapDescriptor.generateP2(exploredMaze))
             return result
 
         # Receive sensor data from arduino
@@ -163,7 +165,7 @@ class Robot:
 
     def sendAction(self, action):
         # Send action to arduino
-        CommManager.sendMsg(Helper.actionToCmd(action))
+        CommManager.sendMsg(Helper.actionToCmd(action).value)
         if action != Action.CALIBRATE:
             # Send robot position and map descriptor to android
             data = [self.curRow, self.curCol, self.curDir.value]
