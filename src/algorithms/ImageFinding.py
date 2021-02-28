@@ -1,6 +1,7 @@
 import time
 
 from .ExplorationAlgo import ExplorationAlgo
+from ..static.Action import Action
 from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL
 
 
@@ -35,6 +36,26 @@ class ImageFinding(ExplorationAlgo):
         print(self.exploredImages)
 
         # TO DO: Continue finding images when there are missing images although robot has returned to start zone
+
+    """
+        Determines the next move for the robot and executes it accordingly.
+        For left hugging, look left first to always have obstacle at the right side
+        """
+
+    def nextMove(self):
+        if self.lookLeft():
+            self.moveRobot(Action.TURN_LEFT)
+            if self.lookForward():
+                self.moveRobot(Action.MOVE_FORWARD)
+        elif self.lookForward():
+            self.moveRobot(Action.MOVE_FORWARD)
+        elif self.lookRight():
+            self.moveRobot(Action.TURN_RIGHT)
+            if self.lookForward():
+                self.moveRobot(Action.MOVE_FORWARD)
+        else:
+            self.moveRobot(Action.TURN_RIGHT)
+            self.moveRobot(Action.TURN_RIGHT)
 
     def moveRobot(self, action, exploredImages=None):
         super().moveRobot(action, exploredImages=self.exploredImages)

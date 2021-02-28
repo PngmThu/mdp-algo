@@ -1,6 +1,9 @@
+from ..communication.CommManager import CommManager
+from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..static.Color import Color
-from ..static.Constants import di, dj
+from ..static.Constants import di, dj, MAX_FORWARD
+from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
 
@@ -24,13 +27,16 @@ class ExplorationAlgo:
         if self.lookLeft():
             self.moveRobot(Action.TURN_LEFT)
             if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
+                # self.moveRobot(Action.MOVE_FORWARD)
+                self.moveRobotForwardMultiple()
         elif self.lookForward():
-            self.moveRobot(Action.MOVE_FORWARD)
+            # self.moveRobot(Action.MOVE_FORWARD)
+            self.moveRobotForwardMultiple()
         elif self.lookRight():
             self.moveRobot(Action.TURN_RIGHT)
             if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
+                # self.moveRobot(Action.MOVE_FORWARD)
+                self.moveRobotForwardMultiple()
         else:
             self.moveRobot(Action.TURN_RIGHT)
             self.moveRobot(Action.TURN_RIGHT)
@@ -40,6 +46,26 @@ class ExplorationAlgo:
             self.simulator.updateRobotPos(action)
         self.robot.move(action, sendMsg=self.realRun)
         self.senseAndRepaint(exploredImages)
+
+    def moveRobotForwardMultiple(self, exploredImages=None):
+        numOfMoves = self.maxMoveForward()
+        # print("numOfMoves:", numOfMoves)
+        if numOfMoves == 1:
+            self.robot.move(Action.MOVE_FORWARD, sendMsg=self.realRun)
+            self.senseAndRepaint(exploredImages)
+            return
+        if self.realRun:
+            CommManager.sendMsg(CommandType.MOVE_FORWARD, numOfMoves)
+        while numOfMoves != 0:
+            if self.simulator is not None:
+                self.simulator.updateRobotPos(Action.MOVE_FORWARD)
+            self.robot.move(Action.MOVE_FORWARD, sendMsg=False)
+            self.senseAndRepaint(exploredImages)
+            numOfMoves -= 1
+        # if self.simulator is not None:
+        #     self.simulator.updateRobotPos(action)
+        # self.robot.move(action, sendMsg=self.realRun)
+        # self.senseAndRepaint(exploredImages)
 
     def senseAndRepaint(self, exploredImages=None):
         self.robot.updateSensorsPos()
@@ -69,6 +95,50 @@ class ExplorationAlgo:
 
     def lookLeft(self):
         return self.freeAt(Helper.previousDir(self.robot.curDir))
+
+    def maxMoveForward(self):
+        maxMove = 0
+        for n in range(4, 0, -1):
+            offset = 4 - n
+            if self.robot.curDir == Direction.UP:
+                row = self.robot.curRow + 2 - offset
+                col = self.robot.curCol - 2
+                if Helper.isBoundary(row, col) or (
+                        Helper.isValidCoordinates(row, col) and self.exploredMaze[row][col].isExplored and
+                        self.exploredMaze[row][col].isObstacle):
+                    maxMove = n
+                    break
+            elif self.robot.curDir == Direction.RIGHT:
+                row = self.robot.curRow + 2
+                col = self.robot.curCol + 2 - offset
+                if Helper.isBoundary(row, col) or (
+                        Helper.isValidCoordinates(row, col) and self.exploredMaze[row][col].isExplored and
+                        self.exploredMaze[row][col].isObstacle):
+                    maxMove = n
+                    break
+            elif self.robot.curDir == Direction.DOWN:
+                row = self.robot.curRow - 2 + offset
+                col = self.robot.curCol + 2
+                if Helper.isBoundary(row, col) or (
+                        Helper.isValidCoordinates(row, col) and self.exploredMaze[row][col].isExplored and
+                        self.exploredMaze[row][col].isObstacle):
+                    maxMove = n
+                    break
+            elif self.robot.curDir == Direction.LEFT:
+                row = self.robot.curRow - 2
+                col = self.robot.curCol - 2 + offset
+                if Helper.isBoundary(row, col) or (
+                        Helper.isValidCoordinates(row, col) and self.exploredMaze[row][col].isExplored and
+                        self.exploredMaze[row][col].isObstacle):
+                    maxMove = n
+                    break
+        # print("maxMove:", maxMove)
+        for n in range(maxMove, 0, -1):
+            row = self.robot.curRow + di[self.robot.curDir.value] * n
+            col = self.robot.curCol + dj[self.robot.curDir.value] * n
+            if self.canVisit(row, col):
+                return n
+        return 0
 
     # Check whether the next cell at the direction is free
     def freeAt(self, direction):
