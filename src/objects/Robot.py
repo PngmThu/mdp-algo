@@ -171,6 +171,7 @@ class Robot:
         # Send camera position and ask to capture image
         data = [self.camera.curRow, self.camera.curCol, self.camera.curDir.value]
         CommManager.sendMsg(CommandType.CAPTURE, data)
+        Helper.waitForCommand(CommandType.DONE_CAPTURE)  # Wait for done capturing
 
     def moveForwardMultiple(self, count):
         if count == 1:

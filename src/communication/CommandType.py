@@ -31,6 +31,7 @@ class CommandType(enum.Enum):
     IMAGE = "IMAGE"
     DELETE_IMAGE = "DELETE_IMAGE"
     FINISH_IR = "FINISH_IR"
+    DONE_CAPTURE = "DONE_CAPTURE"
 
     # From arduino
     SENSOR_DATA = "SENSOR_DATA"

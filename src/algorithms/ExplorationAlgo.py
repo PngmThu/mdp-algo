@@ -2,7 +2,7 @@ from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..static.Color import Color
-from ..static.Constants import di, dj, MAX_FORWARD
+from ..static.Constants import di, dj
 from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
@@ -27,23 +27,18 @@ class ExplorationAlgo:
         if self.lookLeft():
             self.moveRobot(Action.TURN_LEFT)
             if self.lookForward():
-                # self.moveRobot(Action.MOVE_FORWARD)
                 self.moveRobotForwardMultiple()
         elif self.lookForward():
-            # self.moveRobot(Action.MOVE_FORWARD)
             self.moveRobotForwardMultiple()
         elif self.lookRight():
             self.moveRobot(Action.TURN_RIGHT)
             if self.lookForward():
-                # self.moveRobot(Action.MOVE_FORWARD)
                 self.moveRobotForwardMultiple()
         else:
             self.moveRobot(Action.TURN_RIGHT)
             self.moveRobot(Action.TURN_RIGHT)
 
     def moveRobot(self, action, exploredImages=None):
-        if self.simulator is not None:
-            self.simulator.updateRobotPos(action)
         self.robot.move(action, sendMsg=self.realRun)
         self.senseAndRepaint(exploredImages)
 
@@ -51,21 +46,19 @@ class ExplorationAlgo:
         numOfMoves = self.maxMoveForward()
         # print("numOfMoves:", numOfMoves)
         if numOfMoves == 1:
-            self.robot.move(Action.MOVE_FORWARD, sendMsg=self.realRun)
-            self.senseAndRepaint(exploredImages)
+            self.moveRobot(Action.MOVE_FORWARD)
             return
         if self.realRun:
             CommManager.sendMsg(CommandType.MOVE_FORWARD, numOfMoves)
-        while numOfMoves != 0:
-            if self.simulator is not None:
-                self.simulator.updateRobotPos(Action.MOVE_FORWARD)
+        temp = numOfMoves
+        while temp != 0:
             self.robot.move(Action.MOVE_FORWARD, sendMsg=False)
             self.senseAndRepaint(exploredImages)
-            numOfMoves -= 1
-        # if self.simulator is not None:
-        #     self.simulator.updateRobotPos(action)
-        # self.robot.move(action, sendMsg=self.realRun)
-        # self.senseAndRepaint(exploredImages)
+            temp -= 1
+        # After sensor data has been sent (action complete), send calibration when moves > 3
+        if self.realRun and numOfMoves >= 3:
+            CommManager.sendMsg(CommandType.CALIBRATE)
+            Helper.waitForCommand(CommandType.ACTION_COMPLETE)
 
     def senseAndRepaint(self, exploredImages=None):
         self.robot.updateSensorsPos()

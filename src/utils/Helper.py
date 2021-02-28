@@ -146,12 +146,12 @@ class Helper:
     def waitForCommand(commandType):
         msgArr = CommManager.recvMsg()
         while True:
-            start = False
+            received = False
             for msg in msgArr:
                 if msg.startswith(commandType.value):
-                    start = True
+                    received = True
                     break
-            if start:
+            if received:
                 break
             msgArr = CommManager.recvMsg()  # Continue wait for the command
 

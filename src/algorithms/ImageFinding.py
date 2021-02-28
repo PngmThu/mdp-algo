@@ -1,11 +1,15 @@
 import time
 
 from .ExplorationAlgo import ExplorationAlgo
+from ..communication.CommManager import CommManager
+from ..communication.CommandType import CommandType
 from ..static.Action import Action
-from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL
-
+from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL, MAX_FORWARD
 
 # Inherit from ExplorationAlgo
+from ..utils.Helper import Helper
+
+
 class ImageFinding(ExplorationAlgo):
 
     # realImages: the set of (row, col, direction) of real images
@@ -13,6 +17,7 @@ class ImageFinding(ExplorationAlgo):
         super().__init__(exploredMaze, realMaze, robot, simulator, timeLimit, realRun)
         self.exploredImages = set()
         self.realImages = realImages
+        self.forwardCnt = 0
 
     def runImageFinding(self):
         print("Start image finding...")
@@ -21,8 +26,8 @@ class ImageFinding(ExplorationAlgo):
         self.startTime = time.time()
         self.endTime = self.startTime + self.timeLimit
 
-        self.captureImage()
         self.senseAndRepaint()
+        self.captureImage()
 
         self.nextMove()
         while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
@@ -60,6 +65,15 @@ class ImageFinding(ExplorationAlgo):
     def moveRobot(self, action, exploredImages=None):
         super().moveRobot(action, exploredImages=self.exploredImages)
         self.captureImage()
+        if self.realRun:
+            if action == Action.MOVE_FORWARD:
+                self.forwardCnt += 1
+                if self.forwardCnt == MAX_FORWARD:
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    self.forwardCnt = 0
+            else:
+                self.forwardCnt = 0
 
     def captureImage(self):
         self.robot.updateCameraPos()
