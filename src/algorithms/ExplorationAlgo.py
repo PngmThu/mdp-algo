@@ -35,15 +35,15 @@ class ExplorationAlgo:
             self.moveRobot(Action.TURN_RIGHT)
             self.moveRobot(Action.TURN_RIGHT)
 
-    def moveRobot(self, action):
+    def moveRobot(self, action, exploredImages=None):
         if self.simulator is not None:
             self.simulator.updateRobotPos(action)
         self.robot.move(action, sendMsg=self.realRun)
-        self.senseAndRepaint()
+        self.senseAndRepaint(exploredImages)
 
-    def senseAndRepaint(self):
+    def senseAndRepaint(self, exploredImages=None):
         self.robot.updateSensorsPos()
-        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze)
+        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze, exploredImages)
         sensors = [self.robot.SRFrontLeft, self.robot.SRFrontCenter, self.robot.SRFrontRight,
                    self.robot.SRLeftHead, self.robot.SRLeftTail, self.robot.LRRight]
         if self.simulator is None:

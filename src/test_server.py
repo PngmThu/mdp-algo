@@ -12,10 +12,10 @@ print("Waiting for connection...")
 conn, addr = socket.accept()
 print(conn, addr)
 
-# data = input("Enter your value: ")
-# # data = data.replace("\n", "")
-# print(data)
-# conn.send(str.encode(data))
+data = input("Enter your value: ")
+# data = data.replace("\n", "")
+print(data)
+conn.send(str.encode(data))
 
 while True:
     # # Receive up to 4096 bytes from a peer

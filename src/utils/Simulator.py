@@ -95,8 +95,8 @@ class Simulator:
         for dr in range(-1, 2):
             for dc in range(-1, 2):
                 self.canvas.itemconfig(self.box_ids[START_ROW + dr][START_COL + dc], fill=colors[Color.ROBOT.value])
-        # Facing: Left
-        self.canvas.itemconfig(self.box_ids[START_ROW][START_COL + 1], fill=colors[Color.FACING.value])
+        # Facing: Up
+        self.canvas.itemconfig(self.box_ids[START_ROW + 1][START_COL], fill=colors[Color.FACING.value])
 
         # self.drawImageSticker(6, 0, Direction.DOWN)
         # self.drawImageSticker(2, 7, Direction.LEFT)
@@ -208,3 +208,18 @@ class Simulator:
         self.create_circle(CIRCLE_X + col * GRID_WIDTH + GRID_WIDTH / 2 * dj[direction.value],
                            CIRCLE_Y - row * GRID_WIDTH - GRID_WIDTH / 2 * di[direction.value],
                            CIRCLE_RADIUS, fill=colors[Color.IMAGE.value])
+
+    def setWayPoint(self, row, col):
+        if 0 <= row < ROW_SIZE and 0 <= col < COL_SIZE and self.scoreMaze[row][col] != 1:
+            self.canvas.itemconfig(self.box_ids[row][col], fill=colors[Color.WAYPOINT.value])
+            self.scoreMaze[row][col] = Color.WAYPOINT.value
+            return True
+        return False
+
+    def removeWayPoint(self, row, col):
+        if 0 <= row < ROW_SIZE and 0 <= col < COL_SIZE and self.scoreMaze[row][col] == Color.WAYPOINT.value:
+            self.canvas.itemconfig(self.box_ids[row][row], fill=colors[Color.EMPTY_CELL.value])
+            self.scoreMaze[self.waypointRow][self.waypointCol] = 0
+            return True
+        return False
+

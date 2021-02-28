@@ -7,7 +7,7 @@ from src.communication.CommandType import CommandType
 from src.objects.Robot import Robot
 from src.objects.Cell import Cell
 from src.static.Color import Color
-from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL, SPEED
+from src.static.Constants import ROW_SIZE, COL_SIZE, GOAL_ROW, GOAL_COL, START_ROW, START_COL, SPEED, SPLITTER
 from src.static.Direction import Direction
 from src.utils.Helper import Helper
 from src.algorithms.FastestPath import FastestPath
@@ -60,32 +60,74 @@ def main():
         else:
             maze = loadMazeFromArenaFile()
 
+        waypointRow = None
+        waypointCol = None
+
         # Fastest Path
         if choice == 1 or choice == 2:
+            """   Enter way point here"""
+            waypointRow = None
+            waypointCol = None
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             fastestPathInit(maze, scoreMaze)
 
             if choice == 1:
                 realRun = False
+                """   Enter way point for simulated run   """
+                waypointRow = 15
+                waypointCol = 2
+                if Helper.isValidWayPoint(maze, waypointRow, waypointCol):
+                    scoreMaze[waypointRow][waypointCol] = Color.WAYPOINT.value
             else:
                 realRun = True
-            robot = Robot(START_ROW, START_COL, realRun)
-            simulator = Simulator(scoreMaze, robot)
-            robot.setSimulator(simulator)
 
             # Real run
             if choice == 2:
                 CommManager.connect()
-                msg = CommManager.recvMsg()
-                while not msg.startswith(CommandType.FP_START.value):
-                    msg = CommManager.recvMsg()
-            # Start fastest path in a new thread
+
+                # Send map descriptor to android
+                data = [MapDescriptor.generateP1(maze), MapDescriptor.generateP2(maze)]
+                CommManager.sendMsg(CommandType.MAP, data)
+
+                msgArr = CommManager.recvMsg()
+                while True:
+                    start = False
+                    for msg in msgArr:
+                        if msg.startswith(CommandType.FP_START.value):
+                            start = True
+                            break
+                        elif msg.startswith(CommandType.SET_WAYPOINT.value):
+                            data = msg.split(SPLITTER)
+                            row = int(data[1])
+                            col = int(data[2])
+                            if Helper.isValidWayPoint(maze, row, col):
+                                waypointRow = row
+                                waypointCol = col
+                                scoreMaze[waypointRow][waypointCol] = Color.WAYPOINT.value
+                                CommManager.sendMsg(CommandType.WAYPOINT, data[1:])
+                        elif msg.startswith(CommandType.RM_WAYPOINT.value):
+                            if Helper.isValidWayPoint(maze,waypointRow, waypointCol):
+                                scoreMaze[waypointRow][waypointCol] = Color.EMPTY_CELL.value
+                            waypointRow = None
+                            waypointCol = None
+                    if start:
+                        break
+                    msgArr = CommManager.recvMsg()  # Continue wait for FP_START
+
+            robot = Robot(START_ROW, START_COL, realRun)
+            simulator = Simulator(scoreMaze, robot)
+            robot.setSimulator(simulator)
+
             FPthread = Thread(
-                target=lambda: FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun).runFastestPath(),
+                target=lambda: fastestPathRun(maze, robot, realRun, waypointRow, waypointCol),
                 daemon=True)
             FPthread.start()
 
             simulator.run()
+
+            # Reset waypoint
+            waypointRow = None
+            waypointCol = None
         # Exploration
         elif choice == 3 or choice == 4:
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
@@ -106,9 +148,7 @@ def main():
 
             if choice == 4:
                 CommManager.connect()
-                msg = CommManager.recvMsg()
-                while msg != CommandType.EX_START.value:
-                    msg = CommManager.recvMsg()
+                Helper.waitForCommand(CommandType.EX_START)
 
             # Start exploration in a new thread
             EXThread = Thread(
@@ -138,9 +178,7 @@ def main():
 
             if choice == 6:
                 CommManager.connect()
-                msg = CommManager.recvMsg()
-                while msg != CommandType.IF_START.value:
-                    msg = CommManager.recvMsg()
+                Helper.waitForCommand(CommandType.IF_START)
 
             # Start image finding in a new thread
             IFThread = Thread(
@@ -153,6 +191,12 @@ def main():
 
         printMenu()
         choice = int(input("Enter your choice: "))
+
+
+def fastestPathRun(maze, robot, realRun, waypointRow, waypointCol):
+    if waypointRow is not None and waypointCol is not None:
+        FastestPath(maze, robot, waypointRow, waypointCol, realRun).runFastestPath()
+    FastestPath(maze, robot, GOAL_ROW, GOAL_COL, realRun).runFastestPath()
 
 
 def printMenu():

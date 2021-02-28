@@ -20,6 +20,7 @@ class ImageFinding(ExplorationAlgo):
         self.startTime = time.time()
         self.endTime = self.startTime + self.timeLimit
 
+        self.captureImage()
         self.senseAndRepaint()
 
         self.nextMove()
@@ -35,8 +36,8 @@ class ImageFinding(ExplorationAlgo):
 
         # TO DO: Continue finding images when there are missing images although robot has returned to start zone
 
-    def moveRobot(self, action):
-        super().moveRobot(action)
+    def moveRobot(self, action, exploredImages=None):
+        super().moveRobot(action, exploredImages=self.exploredImages)
         self.captureImage()
 
     def captureImage(self):

@@ -1,3 +1,4 @@
+from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..utils.Helper import Helper
 from ..static.Constants import ROW_SIZE, \
@@ -134,19 +135,19 @@ class FastestPath:
                 fCount += 1
                 if fCount == MAX_FORWARD:
                     self.robot.moveForwardMultiple(fCount)
-                    Helper.receiveActionComplete()
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     fCount = 0
             elif action == Action.TURN_RIGHT or action == Action.TURN_LEFT:
                 if fCount > 0:
                     self.robot.moveForwardMultiple(fCount)
-                    Helper.receiveActionComplete()
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     fCount = 0
                 self.robot.move(action, sendMsg=True)
-                Helper.receiveActionComplete()
+                Helper.waitForCommand(CommandType.ACTION_COMPLETE)
 
         if fCount > 0:
             self.robot.moveForwardMultiple(fCount)
-            Helper.receiveActionComplete()
+            Helper.waitForCommand(CommandType.ACTION_COMPLETE)
 
     # TO DO: find cell that can stop to calibrate
     def canCalibrateAt(self, row, col, direction):

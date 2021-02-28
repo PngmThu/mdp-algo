@@ -1,7 +1,7 @@
 from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..static.Constants import \
-    GOAL_ROW, GOAL_COL, MOVE_COST, TURN_COST, ROW_SIZE, COL_SIZE, START_ROW, START_COL, di, dj
+    GOAL_ROW, GOAL_COL, MOVE_COST, TURN_COST, ROW_SIZE, COL_SIZE, START_ROW, START_COL, di, dj, SPLITTER
 from ..static.Direction import Direction
 from ..static.Action import Action
 
@@ -128,10 +128,32 @@ class Helper:
         return False
 
     @staticmethod
-    def receiveActionComplete():
-        msg = CommManager.recvMsg()
-        while not msg.startswith(CommandType.ACTION_COMPLETE.value):
-            msg = CommManager.recvMsg()
+    def processMsgForImage(msg, exploredImages, simulator):
+        if msg.startswith(CommandType.IMAGE.value):
+            data = msg.split(SPLITTER)
+            row = int(data[1])
+            col = int(data[2])
+            direction = Direction(int(data[3]))
+            if Helper.isBoundary(row, col) or Helper.isValidCoordinates(row, col):
+                image = (row, col, direction)
+                if image not in exploredImages:
+                    exploredImages.add(image)
+                    if simulator is not None:
+                        # Draw image sticker in simulator
+                        simulator.drawImageSticker(row, col, direction)
+
+    @staticmethod
+    def waitForCommand(commandType):
+        msgArr = CommManager.recvMsg()
+        while True:
+            start = False
+            for msg in msgArr:
+                if msg.startswith(commandType.value):
+                    start = True
+                    break
+            if start:
+                break
+            msgArr = CommManager.recvMsg()  # Continue wait for the command
 
     @staticmethod
     def actionToCmd(action):
@@ -143,6 +165,15 @@ class Helper:
             return CommandType.TURN_LEFT
         elif action == Action.CALIBRATE:
             return CommandType.CALIBRATE
+
+    @staticmethod
+    def sendAction(action):
+        # Send action to arduino
+        if action == Action.MOVE_FORWARD:
+            data = [1]
+            CommManager.sendMsg(Helper.actionToCmd(action), 1)
+        else:
+            CommManager.sendMsg(Helper.actionToCmd(action))
 
     @staticmethod
     def getTargetDirForUnexplored(curCell, curDir, targetCell):
@@ -157,3 +188,15 @@ class Helper:
                 return Direction.UP
             else:
                 return curDir
+
+    @staticmethod
+    def isValidWayPoint(maze, waypointRow, waypointCol):
+        if waypointRow is None or waypointCol is None:
+            return False
+        for dr in range(-1, 2):
+            for dc in range(-1, 2):
+                row = waypointRow + dr
+                col = waypointCol + dc
+                if not Helper.isValidCoordinates(row, col) or maze[row][col].isObstacle:
+                    return False
+        return True

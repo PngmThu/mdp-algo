@@ -76,8 +76,13 @@ class Robot:
 
         print(action.name)
 
-        if self.realRun and sendMsg:
-            self.sendAction(action)
+        if self.realRun:
+            # Send action to arduino
+            if sendMsg:
+                Helper.sendAction(action)
+            # Send robot pos to android
+            data = [self.curRow, self.curCol, self.curDir.value]
+            CommManager.sendMsg(CommandType.ROBOT_POS, data)
 
     # If robot is at goal, update touchedGoal to True
     def updateTouchedGoal(self):
@@ -108,7 +113,7 @@ class Robot:
     Calls the .sense() method of all the attached sensors and stores the received values in an integer array.
     @return [SRFrontLeft, SRFrontCenter, SRFrontRight, SRRight, SRLeft, LRLeft]
     """
-    def sense(self, exploredMaze, realMaze):
+    def sense(self, exploredMaze, realMaze, exploredImages=None):
         if not self.realRun:
             result = [self.SRFrontLeft.sense(exploredMaze, realMaze), self.SRFrontCenter.sense(exploredMaze, realMaze),
                       self.SRFrontRight.sense(exploredMaze, realMaze), self.SRLeftHead.sense(exploredMaze, realMaze),
@@ -118,23 +123,24 @@ class Robot:
             return result
 
         # Receive sensor data from arduino
-        msg = CommManager.recvMsg()
-        msgArr = msg.split(SPLITTER)
-        while msgArr[0] != CommandType.SENSOR_DATA.value:
-            # If an image is identified
-            if msgArr[0] == CommandType.IMAGE.value:
-                row = int(msgArr[1])
-                col = int(msgArr[2])
-                direction = int(msgArr[3])
-                if self.simulator is not None:
-                    self.simulator.drawImageSticker(row, col, Direction(direction))
-            msg = CommManager.recvMsg()
-            msgArr = msg.split(SPLITTER)
+        msgArr = CommManager.recvMsg()
+        msgData = []
+        while True:
+            sensed = False
+            for msg in msgArr:
+                if msg.startswith(CommandType.SENSOR_DATA.value):
+                    msgData = msg.split(SPLITTER)
+                    sensed = True
+                elif exploredImages is not None:
+                    Helper.processMsgForImage(msg, exploredImages, self.simulator)
+            if sensed:
+                break
+            msgArr = CommManager.recvMsg()  # Continue wait for sensor data
 
         result = []
         for i in range(1, 7):
-            result.append(int(msgArr[i]))
-        if msgArr[0] == CommandType.SENSOR_DATA.value:
+            result.append(int(msgData[i]))
+        if msgData[0] == CommandType.SENSOR_DATA.value:
             self.SRFrontLeft.processSensorVal(exploredMaze, result[0])
             self.SRFrontCenter.processSensorVal(exploredMaze, result[1])
             self.SRFrontRight.processSensorVal(exploredMaze, result[2])
@@ -160,28 +166,16 @@ class Robot:
             return
         # Send camera position and ask to capture image
         data = [self.camera.curRow, self.camera.curCol, self.camera.curDir.value]
-        CommManager.sendMsg(CommandType.CAPTURE.value, data)
-
-    def sendAction(self, action):
-        # Send action to arduino
-        CommManager.sendMsg(Helper.actionToCmd(action).value)
-        if action != Action.CALIBRATE:
-            # Send robot position and map descriptor to android
-            data = [self.curRow, self.curCol, self.curDir.value]
-            CommManager.sendMsg(CommandType.ROBOT_POS.value, data)
+        CommManager.sendMsg(CommandType.CAPTURE, data)
 
     def moveForwardMultiple(self, count):
         if count == 1:
             self.move(Action.MOVE_FORWARD, sendMsg=True)
             return
-        CommManager.sendMsg(CommandType.MOVE_FORWARD_MULTIPLE.value, count)
+        CommManager.sendMsg(CommandType.MOVE_FORWARD, count)
         while count != 0:
             self.move(Action.MOVE_FORWARD, sendMsg=False)
             count -= 1
-
-        # Send robot position to android
-        dataArr = [self.curRow, self.curCol, self.curDir.value]
-        CommManager.sendMsg(CommandType.ROBOT_POS.value, dataArr)
 
     def updateSimulator(self, action):
         if self.simulator is not None:

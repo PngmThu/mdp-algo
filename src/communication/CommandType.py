@@ -22,7 +22,6 @@ class CommandType(enum.Enum):
     TURN_RIGHT = "R|R"
     TURN_LEFT = "R|L"
     CALIBRATE = "R|C"
-    MOVE_FORWARD_MULTIPLE = "R|F"
     # To image recognition
     CAPTURE = "I|CAPTURE"
 
@@ -41,3 +40,5 @@ class CommandType(enum.Enum):
     EX_START = "EX_START"
     IF_START = "IF_START"
     SET_WAYPOINT = "SET_WAYPOINT"
+    RM_WAYPOINT = "RM_WAYPOINT"
+
