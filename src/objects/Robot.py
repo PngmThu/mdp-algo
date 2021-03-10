@@ -173,11 +173,14 @@ class Robot:
         CommManager.sendMsg(CommandType.CAPTURE, data)
         Helper.waitForCommand(CommandType.DONE_CAPTURE)  # Wait for done capturing
 
-    def moveForwardMultiple(self, count):
+    def moveForwardMultiple(self, count, obstacleAvoid):
         if count == 1:
             self.move(Action.MOVE_FORWARD, sendMsg=True)
             return
-        CommManager.sendMsg(CommandType.MOVE_FORWARD, count)
+        if not obstacleAvoid:
+            CommManager.sendMsg(CommandType.MOVE_FORWARD, count)
+        else:
+            CommManager.sendMsg(CommandType.MOVE_FORWARD_OBSTACLE_AVOID, count)
         while count != 0:
             self.move(Action.MOVE_FORWARD, sendMsg=False)
             count -= 1

@@ -18,7 +18,7 @@ fastestPathDone = False
 
 
 def loadArena():
-    file1 = open("../arenas/arena4.txt", 'r')
+    file1 = open("../arenas/arena5.txt", 'r')
     lines = file1.readlines()
 
     arena = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
@@ -40,7 +40,7 @@ def main():
     # CommManager.sendMsg("I|DoSomething\n")
     # while True:
     #     msg = input("Enter a msg: ")
-    #     CommManager.sendMsg(msg)
+    #     CommManager.sendNormalMsg(msg)
     # # time.sleep(1) # sleep 1s
     # CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
     #
@@ -62,6 +62,8 @@ def main():
 
         waypointRow = None
         waypointCol = None
+        # waypointRow = 15
+        # waypointCol = 2
 
         # Fastest Path
         if choice == 1 or choice == 2:
@@ -74,8 +76,8 @@ def main():
             if choice == 1:
                 realRun = False
                 """   Enter way point for simulated run   """
-                waypointRow = 15
-                waypointCol = 2
+                # waypointRow = 15
+                # waypointCol = 2
                 if Helper.isValidWayPoint(maze, waypointRow, waypointCol):
                     scoreMaze[waypointRow][waypointCol] = Color.WAYPOINT.value
             else:
@@ -104,7 +106,7 @@ def main():
                                 waypointRow = row
                                 waypointCol = col
                                 scoreMaze[waypointRow][waypointCol] = Color.WAYPOINT.value
-                                CommManager.sendMsg(CommandType.WAYPOINT, data[1:])
+                                # CommManager.sendMsg(CommandType.WAYPOINT, data[1:])
                         elif msg.startswith(CommandType.RM_WAYPOINT.value):
                             if Helper.isValidWayPoint(maze,waypointRow, waypointCol):
                                 scoreMaze[waypointRow][waypointCol] = Color.EMPTY_CELL.value

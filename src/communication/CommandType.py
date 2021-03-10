@@ -19,6 +19,7 @@ class CommandType(enum.Enum):
     FINISH_EXPLORATION = "RA|FINISH_EX"
     # To arduino
     MOVE_FORWARD = "R|F"
+    MOVE_FORWARD_OBSTACLE_AVOID = "R|FOA"
     TURN_RIGHT = "R|R"
     TURN_LEFT = "R|L"
     CALIBRATE = "R|C"

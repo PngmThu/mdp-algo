@@ -17,7 +17,7 @@ class ImageFinding(ExplorationAlgo):
         super().__init__(exploredMaze, realMaze, robot, simulator, timeLimit, realRun)
         self.exploredImages = set()
         self.realImages = realImages
-        self.forwardCnt = 0
+        # self.forwardCnt = 0
 
     def runImageFinding(self):
         print("Start image finding...")
@@ -65,15 +65,17 @@ class ImageFinding(ExplorationAlgo):
     def moveRobot(self, action, exploredImages=None):
         super().moveRobot(action, exploredImages=self.exploredImages)
         self.captureImage()
-        if self.realRun:
-            if action == Action.MOVE_FORWARD:
-                self.forwardCnt += 1
-                if self.forwardCnt == MAX_FORWARD:
-                    CommManager.sendMsg(CommandType.CALIBRATE)
-                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-                    self.forwardCnt = 0
-            else:
-                self.forwardCnt = 0
+        # if self.realRun:
+        #     time.sleep(0.2)
+        #     if action == Action.MOVE_FORWARD:
+        #         self.forwardCnt += 1
+        #         if self.forwardCnt == MAX_FORWARD:
+        #             CommManager.sendMsg(CommandType.CALIBRATE)
+        #             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+        #             self.forwardCnt = 0
+        #             time.sleep(0.2)
+        #     else:
+        #         self.forwardCnt = 0
 
     def captureImage(self):
         self.robot.updateCameraPos()

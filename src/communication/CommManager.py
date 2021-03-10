@@ -1,8 +1,8 @@
 import socket
 from ..static.Constants import SPLITTER
 
-HOST = '127.0.0.1'  # (localhost)
-# HOST = '192.168.5.5'  # Standard loopback interface address (localhost)
+# HOST = '127.0.0.1'  # (localhost)
+HOST = '192.168.5.5'  # Standard loopback interface address (localhost)
 PORT = 5555  # Port to listen on
 BUFFER_SIZE = 4096
 
@@ -56,3 +56,19 @@ class CommManager:
             return msgArr
         except socket.error as e:
             print("Error while receiving msg:" + str(e))
+
+    @classmethod
+    def sendNormalMsg(cls, msg):
+        try:
+            # msg = commandType.value
+            # if data is not None:
+            #     if isinstance(data, list):
+            #         for item in data:
+            #             msg += SPLITTER + str(item)
+            #     else:
+            #         msg += SPLITTER + str(data)
+            # msg += "\n"  # At \n to end the command
+            cls.client.send(str.encode(msg))
+            print('Send msg:', msg)
+        except socket.error as e:
+            print("Error while sending msg:" + str(e))

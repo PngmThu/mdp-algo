@@ -1,8 +1,10 @@
+import time
+
 from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..static.Color import Color
-from ..static.Constants import di, dj
+from ..static.Constants import di, dj, MAX_FORWARD
 from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
@@ -18,6 +20,7 @@ class ExplorationAlgo:
         self.endTime = None
         self.simulator = simulator
         self.realRun = realRun
+        self.forwardCnt = 0
 
     """
     Determines the next move for the robot and executes it accordingly.
@@ -27,13 +30,16 @@ class ExplorationAlgo:
         if self.lookLeft():
             self.moveRobot(Action.TURN_LEFT)
             if self.lookForward():
-                self.moveRobotForwardMultiple()
+                self.moveRobot(Action.MOVE_FORWARD)
+                # self.moveRobotForwardMultiple()
         elif self.lookForward():
-            self.moveRobotForwardMultiple()
+            self.moveRobot(Action.MOVE_FORWARD)
+            # self.moveRobotForwardMultiple()
         elif self.lookRight():
             self.moveRobot(Action.TURN_RIGHT)
             if self.lookForward():
-                self.moveRobotForwardMultiple()
+                self.moveRobot(Action.MOVE_FORWARD)
+                # self.moveRobotForwardMultiple()
         else:
             self.moveRobot(Action.TURN_RIGHT)
             self.moveRobot(Action.TURN_RIGHT)
@@ -41,24 +47,46 @@ class ExplorationAlgo:
     def moveRobot(self, action, exploredImages=None):
         self.robot.move(action, sendMsg=self.realRun)
         self.senseAndRepaint(exploredImages)
+        if self.realRun:
+            time.sleep(0.2)
+            if action == Action.MOVE_FORWARD:
+                self.forwardCnt += 1
+                if self.forwardCnt == MAX_FORWARD:
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    self.forwardCnt = 0
+                    time.sleep(0.2)
+            else:
+                self.forwardCnt = 0
 
     def moveRobotForwardMultiple(self, exploredImages=None):
-        numOfMoves = self.maxMoveForward()
+        # numOfMoves = self.maxMoveForward()
+        numOfMoves = 1
         # print("numOfMoves:", numOfMoves)
         if numOfMoves == 1:
             self.moveRobot(Action.MOVE_FORWARD)
+            if self.realRun:
+                self.forwardCnt += 1
+                self.checkToCalibrate()
             return
-        if self.realRun:
-            CommManager.sendMsg(CommandType.MOVE_FORWARD, numOfMoves)
-        temp = numOfMoves
-        while temp != 0:
-            self.robot.move(Action.MOVE_FORWARD, sendMsg=False)
-            self.senseAndRepaint(exploredImages)
-            temp -= 1
-        # After sensor data has been sent (action complete), send calibration when moves > 3
-        if self.realRun and numOfMoves >= 3:
+        # if self.realRun:
+        #     CommManager.sendMsg(CommandType.MOVE_FORWARD, numOfMoves)
+        # temp = numOfMoves
+        # while temp != 0:
+        #     self.robot.move(Action.MOVE_FORWARD, sendMsg=False)
+        #     self.senseAndRepaint(exploredImages)
+        #     temp -= 1
+        # if self.realRun:
+        #     time.sleep(0.2)
+        #     self.forwardCnt += numOfMoves
+        #     self.checkToCalibrate()
+
+    def checkToCalibrate(self):
+        if self.forwardCnt >= MAX_FORWARD:
             CommManager.sendMsg(CommandType.CALIBRATE)
             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+            self.forwardCnt = 0
+            time.sleep(0.2)
 
     def senseAndRepaint(self, exploredImages=None):
         self.robot.updateSensorsPos()
@@ -73,10 +101,12 @@ class ExplorationAlgo:
             sensor = sensors[i]
             if dist == -1:
                 for d in range(1, sensor.upperRange + 1):
-                    self.simulator.paintCell(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value], Color.EMPTY_CELL)
+                    if Helper.isValidCoordinates(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value]):
+                        self.simulator.paintCell(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value], Color.EMPTY_CELL)
             else:
                 for d in range(1, dist):
-                    self.simulator.paintCell(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value], Color.EMPTY_CELL)
+                    if Helper.isValidCoordinates(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value]):
+                        self.simulator.paintCell(sensor.curRow + d * di[sensor.curDir.value], sensor.curCol + d * dj[sensor.curDir.value], Color.EMPTY_CELL)
                 if Helper.isValidCoordinates(sensor.curRow + dist * di[sensor.curDir.value], sensor.curCol + dist * dj[sensor.curDir.value]):
                     self.simulator.paintCell(sensor.curRow + dist * di[sensor.curDir.value], sensor.curCol + dist * dj[sensor.curDir.value], Color.OBSTACLE)
 

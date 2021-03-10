@@ -90,8 +90,9 @@ class Sensor:
 
             # Explored
             exploredMaze[row][col].isExplored = True
+            exploredMaze[row][col].isObstacle = False
 
             # Explored cell is an obstacle
-            if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row,                                                                                             col):
+            if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row, col):
                 exploredMaze[row][col].isObstacle = True
                 break

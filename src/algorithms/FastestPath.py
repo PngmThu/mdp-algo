@@ -1,10 +1,12 @@
+import time
+
 from ..communication.CommandType import CommandType
 from ..objects.Robot import Robot
 from ..static.Action import Action
 from ..static.CalibrationStatus import CalibrationStatus
 from ..utils.Helper import Helper
 from ..static.Constants import ROW_SIZE, \
-    COL_SIZE, INF_COST, di, dj, MAX_FORWARD
+    COL_SIZE, INF_COST, di, dj, MAX_FORWARD, GOAL_ROW, GOAL_COL
 
 
 class FastestPath:
@@ -72,7 +74,8 @@ class FastestPath:
                 # Calibration
                 actionsWithCalibrate = self.getActionsWithCalibrate(actions)
                 if execute:
-                    self.executePath(actionsWithCalibrate)
+                    # self.executePath(actionsWithCalibrate)
+                    self.executePath(actions)
                 return actionsWithCalibrate
 
             for t in range(4):
@@ -116,7 +119,8 @@ class FastestPath:
         cur = pathStack[-1]
         direction = self.robot.curDir
         pathStack.pop()
-        actions = []
+        # actions = [Action.CALIBRATE]  # Calibrate at the start
+        actions = []  # Calibrate at the start
         while len(pathStack) != 0:
             nextCell = pathStack[-1]
             pathStack.pop()
@@ -128,6 +132,12 @@ class FastestPath:
                 actions.append(targetAction)
             actions.append(Action.MOVE_FORWARD)
             cur = nextCell
+
+        # # Calibrate at the end if the destination is the goal zone
+        # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL:
+        #     lastForward = actions.pop()
+        #     actions.append(lastForward[2:])
+        #     actions.append(Action.CALIBRATE)  # Calibrate at the end
         return actions
 
     def executePath(self, actions):
@@ -137,24 +147,45 @@ class FastestPath:
             return
 
         fCount = 0
-        for action in actions:
+        for i in range(len(actions)):
+            action = actions[i]
             if action == Action.MOVE_FORWARD:
                 fCount += 1
                 if fCount == MAX_FORWARD:
-                    self.robot.moveForwardMultiple(fCount)
+                    obstacleAvoid = False
+                    # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL and i == len(actions) - 1:
+                    #     obstacleAvoid = True
+                    # else:
+                    #     obstacleAvoid = False
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.2)
                     fCount = 0
             else:
                 if fCount > 0:
-                    self.robot.moveForwardMultiple(fCount)
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid=False)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.2)
                     fCount = 0
                 self.robot.move(action, sendMsg=True)
                 Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                time.sleep(0.2)
 
         if fCount > 0:
-            self.robot.moveForwardMultiple(fCount)
+            # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL:
+            #     obstacleAvoid = True
+            # else:
+            #     obstacleAvoid = False
+            obstacleAvoid = False
+            self.robot.moveForwardMultiple(fCount, obstacleAvoid)
             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+            time.sleep(0.2)
+
+        # Calibrate at the end if the destination is the goal zone
+        # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL:
+        self.robot.move(Action.CALIBRATE, sendMsg=True)
+        Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+        time.sleep(0.2)
 
     # Check whether exist 2 obstacles at the direction
     def canCalibrateAt(self, row, col, direction):
