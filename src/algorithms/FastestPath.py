@@ -159,17 +159,17 @@ class FastestPath:
                     #     obstacleAvoid = False
                     self.robot.moveForwardMultiple(fCount, obstacleAvoid)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-                    time.sleep(0.2)
+                    time.sleep(0.05)
                     fCount = 0
             else:
                 if fCount > 0:
                     self.robot.moveForwardMultiple(fCount, obstacleAvoid=False)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-                    time.sleep(0.2)
+                    time.sleep(0.05)
                     fCount = 0
                 self.robot.move(action, sendMsg=True)
                 Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-                time.sleep(0.2)
+                time.sleep(0.05)
 
         if fCount > 0:
             # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL:
@@ -179,13 +179,13 @@ class FastestPath:
             obstacleAvoid = False
             self.robot.moveForwardMultiple(fCount, obstacleAvoid)
             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-            time.sleep(0.2)
+            time.sleep(0.05)
 
         # Calibrate at the end if the destination is the goal zone
         # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL:
-        self.robot.move(Action.CALIBRATE, sendMsg=True)
-        Helper.waitForCommand(CommandType.ACTION_COMPLETE)
-        time.sleep(0.2)
+        #     self.robot.move(Action.CALIBRATE, sendMsg=True)
+        #     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+        #     time.sleep(0.2)
 
     # Check whether exist 2 obstacles at the direction
     def canCalibrateAt(self, row, col, direction):
