@@ -32,15 +32,15 @@ def loadArena():
 
 def main():
     """ Test CommManager """
-    CommManager.connect()
+    # CommManager.connect()
 
     # Need to use mutex to make sure that 2 commands are well-received
     # CommManager.sendMsg("AI|DoSomething1\nAI|DoSomething2\n")
     # CommManager.sendMsg("AI|DoSomething2\n")
     # CommManager.sendMsg("I|DoSomething\n")
-    while True:
-        msg = input("Enter a msg: ")
-        CommManager.sendNormalMsg(msg)
+    # while True:
+    #     msg = input("Enter a msg: ")
+    #     CommManager.sendNormalMsg(msg)
     # # time.sleep(1) # sleep 1s
     # CommManager.sendMsg("NO_DATE_COMMAND_TYPE")
     #
