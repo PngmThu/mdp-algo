@@ -14,7 +14,6 @@ class Exploration(ExplorationAlgo):
     def __init__(self, exploredMaze, realMaze, robot, simulator, timeLimit, coverageLimit, realRun):
         super().__init__(exploredMaze, realMaze, robot, simulator, timeLimit, realRun)
         self.coverageLimit = coverageLimit
-        self.backToStart = False
 
     """
      Loops through robot movements until one (or more) of the following conditions is met:
@@ -48,23 +47,7 @@ class Exploration(ExplorationAlgo):
         # Continue exploring when there are unexplored areas although robot has returned to start zone
         exploredCount = self.calculateExploredCount()
         while exploredCount < self.coverageLimit and time.time() < self.endTime:
-            row, col = self.findFirstUnexploredCell()
-            targetRow, targetCol = self.findNeighborOfUnexploredCell(row, col)
-            actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(execute=False)
-            for action in actions:
-                self.moveRobot(action)
-                # Break if the cell is explored when moving
-                if self.exploredMaze[row][col].isExplored:
-                    break
-            # Only turn when the cell is not explored when moving
-            if not self.exploredMaze[row][col].isExplored:
-                curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
-                targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir, self.exploredMaze[row][col])
-                while self.robot.curDir != targetDir:
-                    targetAction = Helper.getTargetTurn(self.robot.curDir, targetDir)
-                    self.moveRobot(targetAction)
-                    curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
-                    targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir, self.exploredMaze[row][col])
+            self.fastestPathToUnexplored()
             exploredCount = self.calculateExploredCount()
 
         self.goHome()
@@ -91,6 +74,33 @@ class Exploration(ExplorationAlgo):
         print("Time:", time.time() - self.startTime, "seconds")
 
         # TO DO: Calibrate to make sure that the robot is entirely inside start zone
+
+    def fastestPathToUnexplored(self):
+        row, col = self.findFirstUnexploredCell()
+        targetRow, targetCol = self.findNeighborOfUnexploredCell(row, col)
+        actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(
+            execute=False)
+        for action in actions:
+            if time.time() >= self.endTime:
+                break
+            self.moveRobot(action)
+            # Break if the cell is explored when moving
+            if self.exploredMaze[row][col].isExplored:
+                break
+
+        if time.time() >= self.endTime:
+            return
+
+        # Only turn when the cell is not explored when moving
+        if not self.exploredMaze[row][col].isExplored:
+            curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
+            targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir, self.exploredMaze[row][col])
+            while self.robot.curDir != targetDir:
+                targetAction = Helper.getTargetTurn(self.robot.curDir, targetDir)
+                self.moveRobot(targetAction)
+                curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]
+                targetDir = Helper.getTargetDirForUnexplored(curCell, self.robot.curDir,
+                                                             self.exploredMaze[row][col])
 
     def findFirstUnexploredCell(self):
         for i in range(ROW_SIZE):

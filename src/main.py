@@ -18,7 +18,7 @@ fastestPathDone = False
 
 
 def loadArena():
-    file1 = open("../arenas/arena5.txt", 'r')
+    file1 = open("../arenas/arena4.txt", 'r')
     lines = file1.readlines()
 
     arena = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
@@ -168,6 +168,9 @@ def main():
             realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
                           (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
                           (13, 1, Direction.UP)}
+            # realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
+            #               (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
+            #               }
 
             if choice == 5:
                 realRun = False
@@ -185,7 +188,7 @@ def main():
             # Start image finding in a new thread
             IFThread = Thread(
                 target=lambda: ImageFinding(exploredMaze, maze, robot,
-                                            simulator, 3600, realRun, realImages).runImageFinding(),
+                                            simulator, 3600, 300, realRun, realImages).runImageFinding(),
                 daemon=True)
             IFThread.start()
 

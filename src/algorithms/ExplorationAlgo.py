@@ -48,14 +48,14 @@ class ExplorationAlgo:
         self.robot.move(action, sendMsg=self.realRun)
         self.senseAndRepaint(exploredImages)
         if self.realRun:
-            time.sleep(0.2)
+            time.sleep(0.05)
             if action == Action.MOVE_FORWARD:
                 self.forwardCnt += 1
                 if self.forwardCnt == MAX_FORWARD:
                     CommManager.sendMsg(CommandType.CALIBRATE)
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     self.forwardCnt = 0
-                    time.sleep(0.2)
+                    time.sleep(0.05)
             else:
                 self.forwardCnt = 0
 
@@ -86,7 +86,7 @@ class ExplorationAlgo:
             CommManager.sendMsg(CommandType.CALIBRATE)
             Helper.waitForCommand(CommandType.ACTION_COMPLETE)
             self.forwardCnt = 0
-            time.sleep(0.2)
+            time.sleep(0.05)
 
     def senseAndRepaint(self, exploredImages=None):
         self.robot.updateSensorsPos()

@@ -46,7 +46,7 @@ class Robot:
         self.updateSensorsPos()
 
         # Camera is placed to capture left side of the robot
-        self.camera = Camera(row, col, Helper.nextDir(START_DIR))
+        self.camera = Camera(row, col, Helper.previousDir(START_DIR))
 
     def setRobotPos(self, row, col):
         self.curRow = row
@@ -158,7 +158,7 @@ class Robot:
         return result
 
     def updateCameraPos(self):
-        self.camera.setPos(self.curRow, self.curCol, Helper.nextDir(self.curDir))
+        self.camera.setPos(self.curRow, self.curCol, Helper.previousDir(self.curDir))
 
     def captureImage(self, exploredImages, realImages, realMaze):
         if not self.realRun:
