@@ -70,9 +70,9 @@ class Robot:
         elif action == Action.MOVE_BACKWARD:
             self.curRow -= di[self.curDir.value]
             self.curCol -= dj[self.curDir.value]
-        elif action == Action.TURN_RIGHT:
+        elif action == Action.TURN_RIGHT or action == Action.TURN_RIGHT_NO_CALIBRATE:
             self.curDir = Direction((self.curDir.value + 1) % 4)
-        elif action == Action.TURN_LEFT:
+        elif action == Action.TURN_LEFT or action == Action.TURN_LEFT_NO_CALIBRATE:
             self.curDir = Direction((self.curDir.value + 4 - 1) % 4)
 
         self.updateTouchedGoal()
@@ -145,12 +145,12 @@ class Robot:
         for i in range(1, 7):
             result.append(int(msgData[i]))
         if msgData[0] == CommandType.SENSOR_DATA.value:
-            self.SRFrontLeft.processSensorVal(exploredMaze, result[0])
-            self.SRFrontCenter.processSensorVal(exploredMaze, result[1])
-            self.SRFrontRight.processSensorVal(exploredMaze, result[2])
-            self.SRLeftHead.processSensorVal(exploredMaze, result[3])
-            self.SRLeftTail.processSensorVal(exploredMaze, result[4])
-            self.LRRight.processSensorVal(exploredMaze, result[5])
+            self.SRFrontLeft.processSensorVal(exploredMaze, result[0], self.simulator)
+            self.SRFrontCenter.processSensorVal(exploredMaze, result[1], self.simulator)
+            self.SRFrontRight.processSensorVal(exploredMaze, result[2], self.simulator)
+            self.SRLeftHead.processSensorVal(exploredMaze, result[3], self.simulator)
+            self.SRLeftTail.processSensorVal(exploredMaze, result[4], self.simulator)
+            self.LRRight.processSensorVal(exploredMaze, result[5], self.simulator)
 
             # Send map descriptor to android
             data = [MapDescriptor.generateP1(exploredMaze), MapDescriptor.generateP2(exploredMaze)]
@@ -166,12 +166,13 @@ class Robot:
             if self.simulator is not None:
                 # Draw image sticker in simulator
                 for image in images:
-                    self.simulator.drawImageSticker(image[0], image[1], image[2])
+                    self.simulator.drawImageSticker(image[0], image[1], image[2], image[3])
             return
         # Send camera position and ask to capture image
         data = [self.camera.curRow, self.camera.curCol, self.camera.curDir.value]
         CommManager.sendMsg(CommandType.CAPTURE, data)
-        Helper.waitForCommand(CommandType.DONE_CAPTURE)  # Wait for done capturing
+        # Helper.waitForCommand(CommandType.DONE_CAPTURE)  # Wait for done capturing
+        Helper.processCmdAndImage(CommandType.DONE_CAPTURE, exploredImages, self.simulator)
 
     def moveForwardMultiple(self, count, obstacleAvoid):
         if count == 1:

@@ -131,16 +131,29 @@ class Helper:
     def processMsgForImage(msg, exploredImages, simulator):
         if msg.startswith(CommandType.IMAGE.value):
             data = msg.split(SPLITTER)
-            row = int(data[1])
-            col = int(data[2])
-            direction = Direction(int(data[3]))
+            imageId = int(data[1])
+            row = int(data[2])
+            col = int(data[3])
+            direction = Direction(int(data[4]))
             if Helper.isBoundary(row, col) or Helper.isValidCoordinates(row, col):
-                image = (row, col, direction)
-                if image not in exploredImages:
-                    exploredImages.add(image)
-                    if simulator is not None:
-                        # Draw image sticker in simulator
-                        simulator.drawImageSticker(row, col, direction)
+                exploredImages.add(imageId)
+                if simulator is not None:
+                    # Draw image sticker in simulator
+                    simulator.drawImageSticker(imageId, row, col, direction)
+
+    @staticmethod
+    def processCmdAndImage(cmdType, exploredImages, simulator):
+        msgArr = CommManager.recvMsg()
+        while True:
+            received = False
+            for msg in msgArr:
+                if msg.startswith(cmdType.value):
+                    received = True
+                elif exploredImages is not None:
+                    Helper.processMsgForImage(msg, exploredImages, simulator)
+            if received:
+                break
+            msgArr = CommManager.recvMsg()  # Continue wait for action complete
 
     @staticmethod
     def waitForCommand(commandType):
@@ -167,6 +180,10 @@ class Helper:
             return CommandType.CALIBRATE
         elif action == Action.RIGHT_CALIBRATE:
             return CommandType.RIGHT_CALIBRATE
+        elif action == Action.TURN_RIGHT_NO_CALIBRATE:
+            return CommandType.TURN_RIGHT_NO_CALIBRATE
+        elif action == Action.TURN_LEFT_NO_CALIBRATE:
+            return CommandType.TURN_LEFT_NO_CALIBRATE
 
     @staticmethod
     def sendAction(action):

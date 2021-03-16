@@ -2,6 +2,8 @@ import time
 
 from .Exploration import Exploration
 from .FastestPath import FastestPath
+from ..communication.CommManager import CommManager
+from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL, ROW_SIZE, COL_SIZE, di, dj
 from ..static.Direction import Direction
@@ -38,6 +40,7 @@ class ImageFinding(Exploration):
                     self.nextMove()
                     if self.robot.curRow == START_ROW and self.robot.curCol == START_COL:
                         self.backToStart = True
+                        print("back to start")
                 else:
                     super().fastestPathToUnexplored()
             else:
@@ -53,6 +56,9 @@ class ImageFinding(Exploration):
 
                 if not self.leftCellToHug():
                     break
+                # Send FP_START to stop sending sensor data
+                if self.realRun:
+                    CommManager.sendMsg(CommandType.FP_START_TO_ARDUINO)
 
                 startHugRow, startHugCol, startHugDir = self.goToCellToHug()
                 if startHugRow is None or startHugCol is None or startHugDir is None:
@@ -61,13 +67,18 @@ class ImageFinding(Exploration):
                 self.nextMove()
                 self.updateNeedHug()
                 while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
-                    if self.robot.curRow == stopHugRow + di[stopHugDir.value] * 2 and self.robot.curCol == stopHugCol + dj[stopHugDir.value] * 2 and self.robot.curDir == Helper.previousDir(stopHugDir):
+                    if self.robot.curRow == stopHugRow + di[stopHugDir.value] * 2 and self.robot.curCol == stopHugCol + \
+                            dj[stopHugDir.value] * 2 and self.robot.curDir == Helper.previousDir(stopHugDir):
                         break
-                    if self.robot.curRow == startHugRow + di[startHugDir.value] * 2 and self.robot.curCol == startHugCol + dj[startHugDir.value] * 2 and self.robot.curDir == Helper.previousDir(startHugDir):
+                    if self.robot.curRow == startHugRow + di[
+                                                            startHugDir.value] * 2 and self.robot.curCol == startHugCol + dj[
+                                                            startHugDir.value] * 2 and self.robot.curDir == Helper.previousDir(startHugDir):
                         break
-                    self.nextMove()
+                    self.nextMove(sense=False)
                     self.updateNeedHug()
 
+        if self.realRun:
+            CommManager.sendMsg(CommandType.FINISH)
         print("Done image finding!")
         print("Number of explored images:", len(self.exploredImages))
         print(self.exploredImages)
@@ -76,25 +87,30 @@ class ImageFinding(Exploration):
         Determines the next move for the robot and executes it accordingly.
         For left hugging, look left first to always have obstacle at the right side
     """
-    def nextMove(self):
-        if self.lookLeft():
-            self.moveRobot(Action.TURN_LEFT)
-            if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
-        elif self.lookForward():
-            self.moveRobot(Action.MOVE_FORWARD)
-        elif self.lookRight():
-            self.moveRobot(Action.TURN_RIGHT)
-            if self.lookForward():
-                self.moveRobot(Action.MOVE_FORWARD)
-        else:
-            self.moveRobot(Action.TURN_RIGHT)
-            self.moveRobot(Action.TURN_RIGHT)
 
-    def moveRobot(self, action, exploredImages=None):
-        super().moveRobot(action, exploredImages=self.exploredImages)
+    def nextMove(self, sense=True):
+        if self.lookLeft():
+            self.moveRobot(Action.TURN_LEFT, sense)
+            if self.lookForward():
+                self.moveRobot(Action.MOVE_FORWARD, sense)
+        elif self.lookForward():
+            self.moveRobot(Action.MOVE_FORWARD, sense)
+        elif self.lookRight():
+            self.moveRobot(Action.TURN_RIGHT, sense)
+            if self.lookForward():
+                self.moveRobot(Action.MOVE_FORWARD, sense)
+        else:
+            self.moveRobot(Action.TURN_RIGHT, sense)
+            if self.lookForward():
+                self.moveRobot(Action.MOVE_FORWARD, sense)
+            else:
+                self.moveRobot(Action.TURN_RIGHT, sense)
+
+    def moveRobot(self, action, sense=True, exploredImages=None):
+        super().moveRobot(action, sense, exploredImages=self.exploredImages)
         cameraDir = Helper.previousDir(self.robot.curDir)
-        if not Helper.isBoundary(self.robot.curRow + di[cameraDir.value] * 2, self.robot.curCol + dj[cameraDir.value] * 2):
+        if not Helper.isBoundary(self.robot.curRow + di[cameraDir.value] * 2,
+                                 self.robot.curCol + dj[cameraDir.value] * 2):
             self.captureImage()
 
     def captureImage(self):
@@ -142,14 +158,15 @@ class ImageFinding(Exploration):
     def leftCellToHug(self):
         for i in range(ROW_SIZE):
             for j in range(COL_SIZE):
-                if self.needHug:
+                if self.needHug[i][j]:
                     return True
         return False
 
     def findFirstCellToHug(self):
         for i in range(ROW_SIZE):
             for j in range(COL_SIZE):
-                if self.needHug[i][j] and super().canVisit(i + di[Direction.DOWN.value] * 2, j + dj[Direction.DOWN.value] * 2):
+                if self.needHug[i][j] and super().canVisit(i + di[Direction.DOWN.value] * 2,
+                                                           j + dj[Direction.DOWN.value] * 2):
                     return i, j, Direction.DOWN
         return None
 

@@ -2,6 +2,8 @@ import time
 
 from .ExplorationAlgo import ExplorationAlgo
 from .FastestPath import FastestPath
+from ..communication.CommManager import CommManager
+from ..communication.CommandType import CommandType
 from ..static.Constants import ROW_SIZE, COL_SIZE, START_ROW, START_COL, \
     GOAL_ROW, GOAL_COL
 from ..static.Direction import Direction
@@ -51,6 +53,8 @@ class Exploration(ExplorationAlgo):
             exploredCount = self.calculateExploredCount()
 
         self.goHome()
+        if self.realRun:
+            CommManager.sendMsg(CommandType.FINISH)
 
     def calculateExploredCount(self):
         cnt = 0

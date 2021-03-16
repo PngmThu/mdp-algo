@@ -50,6 +50,10 @@ def main():
     # CommManager.recvMsg()
     # print("Second received message")
 
+    connectChoice = input("Real run? Connect to server? (Y/N): ")
+    if connectChoice == "Y":
+        CommManager.connect()
+
     printMenu()
     choice = int(input("Enter your choice: "))
     while 1 <= choice <= 6:
@@ -85,7 +89,7 @@ def main():
 
             # Real run
             if choice == 2:
-                CommManager.connect()
+                # CommManager.connect()
 
                 # Send map descriptor to android
                 data = [MapDescriptor.generateP1(maze), MapDescriptor.generateP2(maze)]
@@ -149,7 +153,7 @@ def main():
             robot.setSpeed(speed)
 
             if choice == 4:
-                CommManager.connect()
+                # CommManager.connect()
                 Helper.waitForCommand(CommandType.EX_START)
 
             # Start exploration in a new thread
@@ -165,9 +169,9 @@ def main():
             scoreMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             explorationInit(scoreMaze, exploredMaze)
-            realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
-                          (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
-                          (13, 1, Direction.UP)}
+            realImages = {(0, 2, 7, Direction.LEFT), (1, 4, 12, Direction.DOWN),
+                          (2, 10, 10, Direction.RIGHT), (3, 14, 12, Direction.UP),
+                          (4, 13, 1, Direction.UP)}
             # realImages = {(2, 7, Direction.LEFT), (4, 12, Direction.DOWN),
             #               (10, 10, Direction.RIGHT), (14, 12, Direction.UP),
             #               }
@@ -182,7 +186,7 @@ def main():
             robot.setSimulator(simulator)
 
             if choice == 6:
-                CommManager.connect()
+                # CommManager.connect()
                 Helper.waitForCommand(CommandType.IF_START)
 
             # Start image finding in a new thread

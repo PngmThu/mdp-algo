@@ -23,6 +23,7 @@ class Simulator:
         self.start = False
         self.waypointRow = None
         self.waypointCol = None
+        self.imgDict = dict()
 
         self.textBox1 = None
         self.textBox2 = None
@@ -39,7 +40,8 @@ class Simulator:
 
     def retrieveInputs(self):
         if self.waypointRow is not None and self.waypointCol is not None:
-            self.canvas.itemconfig(self.box_ids[self.waypointRow][self.waypointCol], fill=colors[Color.EMPTY_CELL.value])
+            self.canvas.itemconfig(self.box_ids[self.waypointRow][self.waypointCol],
+                                   fill=colors[Color.EMPTY_CELL.value])
             self.scoreMaze[self.waypointRow][self.waypointCol] = 0
         if self.textBox1.get("1.0", "end-1c") == "" or self.textBox2.get("1.0", "end-1c") == "":
             print("Please input again!")
@@ -47,7 +49,8 @@ class Simulator:
         self.waypointRow = int(self.textBox1.get("1.0", "end-1c"))
         self.waypointCol = int(self.textBox2.get("1.0", "end-1c"))
         print("Waypoint:", self.waypointRow, self.waypointCol)
-        if 0 <= self.waypointRow < ROW_SIZE and 0 <= self.waypointCol < COL_SIZE and self.scoreMaze[self.waypointRow][self.waypointCol] != 1:
+        if 0 <= self.waypointRow < ROW_SIZE and 0 <= self.waypointCol < COL_SIZE and self.scoreMaze[self.waypointRow][
+            self.waypointCol] != 1:
             self.canvas.itemconfig(self.box_ids[self.waypointRow][self.waypointCol], fill=colors[Color.WAYPOINT.value])
             self.scoreMaze[self.waypointRow][self.waypointCol] = Color.WAYPOINT.value
         else:
@@ -107,9 +110,9 @@ class Simulator:
         r = self.robot.curRow
         c = self.robot.curCol
         direction = self.robot.curDir
-        if action == Action.TURN_LEFT:
+        if action == Action.TURN_LEFT or action == Action.TURN_LEFT_NO_CALIBRATE:
             self.turnLeftUpdate(r, c, direction)
-        elif action == Action.TURN_RIGHT:
+        elif action == Action.TURN_RIGHT or action == Action.TURN_RIGHT_NO_CALIBRATE:
             self.turnRightUpdate(r, c, direction)
         elif action == Action.MOVE_FORWARD:
             self.moveForwardUpdate(r, c, direction)
@@ -204,10 +207,13 @@ class Simulator:
     def create_circle(self, x, y, r, **kwargs):
         return self.canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)
 
-    def drawImageSticker(self, row, col, direction):
-        self.create_circle(CIRCLE_X + col * GRID_WIDTH + GRID_WIDTH / 2 * dj[direction.value],
-                           CIRCLE_Y - row * GRID_WIDTH - GRID_WIDTH / 2 * di[direction.value],
-                           CIRCLE_RADIUS, fill=colors[Color.IMAGE.value])
+    def drawImageSticker(self, imageId, row, col, direction):
+        if imageId in self.imgDict:
+            self.canvas.delete(self.imgDict[imageId])
+        circle = self.create_circle(CIRCLE_X + col * GRID_WIDTH + GRID_WIDTH / 2 * dj[direction.value],
+                                    CIRCLE_Y - row * GRID_WIDTH - GRID_WIDTH / 2 * di[direction.value],
+                                    CIRCLE_RADIUS, fill=colors[Color.IMAGE.value])
+        self.imgDict[imageId] = circle
 
     def setWayPoint(self, row, col):
         if 0 <= row < ROW_SIZE and 0 <= col < COL_SIZE and self.scoreMaze[row][col] != 1:
@@ -222,4 +228,3 @@ class Simulator:
             self.scoreMaze[self.waypointRow][self.waypointCol] = 0
             return True
         return False
-

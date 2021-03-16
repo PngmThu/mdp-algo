@@ -1,3 +1,4 @@
+from ..static.Color import Color
 from ..static.Constants import di, dj
 from ..utils.Helper import Helper
 
@@ -59,7 +60,7 @@ class Sensor:
         # No obstacle is detected
         return -1
 
-    def processSensorVal(self, exploredMaze, sensorVal):
+    def processSensorVal(self, exploredMaze, sensorVal, simulator):
         if sensorVal == 0:
             return
 
@@ -88,11 +89,17 @@ class Sensor:
             if not Helper.isValidCoordinates(row, col):
                 return
 
+            # If already explored, 2 sensors on the left will not override
+            if exploredMaze[row][col].isExplored and (self.id == "SRLH" or self.id == "SRLT"):
+                break
+
             # Explored
             exploredMaze[row][col].isExplored = True
             exploredMaze[row][col].isObstacle = False
+            simulator.paintCell(row, col, Color.EMPTY_CELL)
 
             # Explored cell is an obstacle
             if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row, col):
                 exploredMaze[row][col].isObstacle = True
+                simulator.paintCell(row, col, Color.OBSTACLE)
                 break

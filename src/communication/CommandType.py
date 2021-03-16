@@ -14,16 +14,17 @@ class CommandType(enum.Enum):
     ROBOT_POS = "A|ROBOT_POS"
     MAP = "A|MAP"
     WAYPOINT = "A|WAYPOINT"
-    FINISH_FASTEST_PATH = "A|FINISH_FP"
-    # To android and arduino
-    FINISH_EXPLORATION = "RA|FINISH_EX"
+    FINISH = "A|FINISH"
     # To arduino
     MOVE_FORWARD = "R|F"
     MOVE_FORWARD_OBSTACLE_AVOID = "R|FOA"
     TURN_RIGHT = "R|R"
     TURN_LEFT = "R|L"
+    TURN_RIGHT_NO_CALIBRATE = "R|RNC"
+    TURN_LEFT_NO_CALIBRATE = "R|LNC"
     CALIBRATE = "R|C"
     RIGHT_CALIBRATE = "R|RC"
+    FP_START_TO_ARDUINO = "R|FP_START"
     # To image recognition
     CAPTURE = "I|CAPTURE"
 
