@@ -189,10 +189,10 @@ def main():
                 # CommManager.connect()
                 Helper.waitForCommand(CommandType.IF_START)
 
-            # Start image finding in a new thread
+            # Start image finding in a new thread: 6 minutes
             IFThread = Thread(
                 target=lambda: ImageFinding(exploredMaze, maze, robot,
-                                            simulator, 3600, 300, realRun, realImages).runImageFinding(),
+                                            simulator, 340, 300, realRun, realImages).runImageFinding(),
                 daemon=True)
             IFThread.start()
 

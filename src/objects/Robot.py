@@ -117,7 +117,7 @@ class Robot:
     Calls the .sense() method of all the attached sensors and stores the received values in an integer array.
     @return [SRFrontLeft, SRFrontCenter, SRFrontRight, SRRight, SRLeft, LRLeft]
     """
-    def sense(self, exploredMaze, realMaze, exploredImages=None):
+    def sense(self, exploredMaze, realMaze, exploredImages=None, flipRecord=None):
         if not self.realRun:
             result = [self.SRFrontLeft.sense(exploredMaze, realMaze), self.SRFrontCenter.sense(exploredMaze, realMaze),
                       self.SRFrontRight.sense(exploredMaze, realMaze), self.SRLeftHead.sense(exploredMaze, realMaze),
@@ -145,12 +145,12 @@ class Robot:
         for i in range(1, 7):
             result.append(int(msgData[i]))
         if msgData[0] == CommandType.SENSOR_DATA.value:
-            self.SRFrontLeft.processSensorVal(exploredMaze, result[0], self.simulator)
-            self.SRFrontCenter.processSensorVal(exploredMaze, result[1], self.simulator)
-            self.SRFrontRight.processSensorVal(exploredMaze, result[2], self.simulator)
-            self.SRLeftHead.processSensorVal(exploredMaze, result[3], self.simulator)
-            self.SRLeftTail.processSensorVal(exploredMaze, result[4], self.simulator)
-            self.LRRight.processSensorVal(exploredMaze, result[5], self.simulator)
+            self.SRFrontLeft.processSensorVal(exploredMaze, result[0], self.simulator, flipRecord)
+            self.SRFrontCenter.processSensorVal(exploredMaze, result[1], self.simulator, flipRecord)
+            self.SRFrontRight.processSensorVal(exploredMaze, result[2], self.simulator, flipRecord)
+            self.SRLeftHead.processSensorVal(exploredMaze, result[3], self.simulator, flipRecord)
+            self.SRLeftTail.processSensorVal(exploredMaze, result[4], self.simulator, flipRecord)
+            self.LRRight.processSensorVal(exploredMaze, result[5], self.simulator, flipRecord)
 
             # Send map descriptor to android
             data = [MapDescriptor.generateP1(exploredMaze), MapDescriptor.generateP2(exploredMaze)]

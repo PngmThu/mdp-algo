@@ -1,5 +1,6 @@
 import time
 
+from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..objects.Robot import Robot
 from ..static.Action import Action
@@ -151,7 +152,7 @@ class FastestPath:
             action = actions[i]
             if action == Action.MOVE_FORWARD:
                 fCount += 1
-                if fCount == MAX_FORWARD:
+                if fCount == 2:
                     obstacleAvoid = False
                     # if self.destRow == GOAL_ROW and self.destCol == GOAL_COL and i == len(actions) - 1:
                     #     obstacleAvoid = True
@@ -161,6 +162,9 @@ class FastestPath:
                     Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     time.sleep(0.05)
                     fCount = 0
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
             else:
                 if fCount > 0:
                     self.robot.moveForwardMultiple(fCount, obstacleAvoid=False)

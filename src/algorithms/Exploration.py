@@ -81,20 +81,25 @@ class Exploration(ExplorationAlgo):
 
     def fastestPathToUnexplored(self):
         row, col = self.findFirstUnexploredCell()
-        targetRow, targetCol = self.findNeighborOfUnexploredCell(row, col)
-        actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(
-            execute=False)
-        for action in actions:
-            if time.time() >= self.endTime:
-                break
-            self.moveRobot(action)
-            # Break if the cell is explored when moving
-            if self.exploredMaze[row][col].isExplored:
-                break
+        res = self.findNeighborOfUnexploredCell(row, col)
+        if res == -1:
+            return
+        targetRow, targetCol = res
+        # actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(
+        #     execute=False)
+        actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath()
+        # for action in actions:
+        #     if time.time() >= self.endTime:
+        #         break
+        #     self.moveRobot(action)
+        #     # Break if the cell is explored when moving
+        #     if self.exploredMaze[row][col].isExplored:
+        #         break
 
         if time.time() >= self.endTime:
             return
 
+        self.senseAndRepaint()
         # Only turn when the cell is not explored when moving
         if not self.exploredMaze[row][col].isExplored:
             curCell = self.exploredMaze[self.robot.curRow][self.robot.curCol]

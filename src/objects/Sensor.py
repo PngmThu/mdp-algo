@@ -60,7 +60,7 @@ class Sensor:
         # No obstacle is detected
         return -1
 
-    def processSensorVal(self, exploredMaze, sensorVal, simulator):
+    def processSensorVal(self, exploredMaze, sensorVal, simulator, flipRecord):
         if sensorVal == 0:
             return
 
@@ -90,16 +90,28 @@ class Sensor:
                 return
 
             # If already explored, 2 sensors on the left will not override
-            if exploredMaze[row][col].isExplored and (self.id == "SRLH" or self.id == "SRLT"):
-                break
+            # if exploredMaze[row][col].isExplored and (self.id == "SRLH" or self.id == "SRLT"):
+            #     break
 
             # Explored
             exploredMaze[row][col].isExplored = True
-            exploredMaze[row][col].isObstacle = False
-            simulator.paintCell(row, col, Color.EMPTY_CELL)
+            # exploredMaze[row][col].isObstacle = False
+            # simulator.paintCell(row, col, Color.EMPTY_CELL)
 
             # Explored cell is an obstacle
             if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row, col):
-                exploredMaze[row][col].isObstacle = True
-                simulator.paintCell(row, col, Color.OBSTACLE)
+                if not exploredMaze[row][col].isObstacle:
+                    flipRecord[row][col] += 1
+                if flipRecord[row][col] > 2:
+                    exploredMaze[row][col].isObstacle = False
+                    simulator.paintCell(row, col, Color.EMPTY_CELL)
+                    print("Flip more than 2:", flipRecord[row][col], row, col)
+                else:
+                    exploredMaze[row][col].isObstacle = True
+                    simulator.paintCell(row, col, Color.OBSTACLE)
                 break
+            else:
+                if exploredMaze[row][col].isObstacle:
+                    flipRecord[row][col] += 1
+                exploredMaze[row][col].isObstacle = False
+                simulator.paintCell(row, col, Color.EMPTY_CELL)

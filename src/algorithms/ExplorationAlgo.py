@@ -66,7 +66,7 @@ class ExplorationAlgo:
             # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
             Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
         if self.realRun:
-            time.sleep(0.05)
+            # time.sleep(0.1)
             if action == Action.MOVE_FORWARD:
                 self.forwardCnt += 1
                 if self.forwardCnt == MAX_FORWARD:
@@ -108,9 +108,9 @@ class ExplorationAlgo:
             self.forwardCnt = 0
             time.sleep(0.05)
 
-    def senseAndRepaint(self, exploredImages=None):
+    def senseAndRepaint(self, exploredImages=None, flipRecord=None):
         self.robot.updateSensorsPos()
-        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze, exploredImages)
+        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze, exploredImages, flipRecord)
         sensors = [self.robot.SRFrontLeft, self.robot.SRFrontCenter, self.robot.SRFrontRight,
                    self.robot.SRLeftHead, self.robot.SRLeftTail, self.robot.LRRight]
         if self.simulator is None:

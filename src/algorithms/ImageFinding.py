@@ -5,7 +5,7 @@ from .FastestPath import FastestPath
 from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..static.Action import Action
-from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL, ROW_SIZE, COL_SIZE, di, dj
+from ..static.Constants import MAX_NUMBER_OF_IMAGES, START_ROW, START_COL, ROW_SIZE, COL_SIZE, di, dj, MAX_FORWARD
 from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
@@ -22,6 +22,13 @@ class ImageFinding(Exploration):
         self.backToStart = False
         # self.forwardCnt = 0
 
+        self.records = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+        for i in range(ROW_SIZE):
+            for j in range(COL_SIZE):
+                self.records[i][j] = [0, 0, 0, 0]
+
+        self.flipRecord = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+
     def runImageFinding(self):
         print("Start image finding...")
 
@@ -29,7 +36,7 @@ class ImageFinding(Exploration):
         self.startTime = time.time()
         self.endTime = self.startTime + self.timeLimit
 
-        self.senseAndRepaint()
+        self.senseAndRepaint(self.exploredImages, self.flipRecord)
         self.captureImage()
 
         self.nextMove()
@@ -64,7 +71,7 @@ class ImageFinding(Exploration):
                 if startHugRow is None or startHugCol is None or startHugDir is None:
                     break
                 stopHugRow, stopHugCol, stopHugDir = self.getStopHugCell(startHugRow, startHugCol, startHugDir)
-                self.nextMove()
+                self.nextMove(sense=False)
                 self.updateNeedHug()
                 while len(self.exploredImages) < MAX_NUMBER_OF_IMAGES and time.time() < self.endTime:
                     if self.robot.curRow == stopHugRow + di[stopHugDir.value] * 2 and self.robot.curCol == stopHugCol + \
@@ -107,11 +114,60 @@ class ImageFinding(Exploration):
                 self.moveRobot(Action.TURN_RIGHT, sense)
 
     def moveRobot(self, action, sense=True, exploredImages=None):
-        super().moveRobot(action, sense, exploredImages=self.exploredImages)
+        # super().moveRobot(action, sense, exploredImages=self.exploredImages)
+        if self.justCalibrate:
+            if action == Action.TURN_RIGHT:
+                self.robot.move(Action.TURN_RIGHT_NO_CALIBRATE, sendMsg=self.realRun)
+            elif action == Action.TURN_LEFT:
+                self.robot.move(Action.TURN_LEFT_NO_CALIBRATE, sendMsg=self.realRun)
+            else:
+                self.robot.move(action, sendMsg=self.realRun)
+            self.justCalibrate = False
+        else:
+            self.robot.move(action, sendMsg=self.realRun)
+
+        if sense:
+            self.senseAndRepaint(self.exploredImages, self.flipRecord)
+        elif self.realRun:
+            # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+            Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
+
         cameraDir = Helper.previousDir(self.robot.curDir)
         if not Helper.isBoundary(self.robot.curRow + di[cameraDir.value] * 2,
                                  self.robot.curCol + dj[cameraDir.value] * 2):
             self.captureImage()
+        elif self.realRun:
+            time.sleep(0.1)
+        # self.captureImage()
+        if sense and action == Action.MOVE_FORWARD:
+            self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] += 1
+            if self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] >= 2:
+                print("Move in the loop:", self.robot.curRow, self.robot.curCol, self.robot.curDir)
+                self.moveRobot(Action.TURN_RIGHT, sense, exploredImages=self.exploredImages)
+                print("Turn right to exit loop")
+                while not self.lookLeft():
+                    self.moveRobot(Action.TURN_RIGHT, sense, exploredImages=self.exploredImages)
+                    print("Turn right to exit loop")
+                print(self.robot.curRow, self.robot.curCol, self.robot.curDir.value)
+                for i in range(ROW_SIZE):
+                    for j in range(COL_SIZE):
+                        print(self.records[i][j], end=" ")
+                    print()
+                self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] = 0
+
+        if self.realRun:
+            # time.sleep(0.1)
+            if action == Action.MOVE_FORWARD:
+                self.forwardCnt += 1
+                if self.forwardCnt == MAX_FORWARD:
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
+                    self.justCalibrate = True
+                    self.forwardCnt = 0
+                    time.sleep(0.05)
+            else:
+                self.forwardCnt = 0
 
     def captureImage(self):
         self.robot.updateCameraPos()
@@ -185,7 +241,7 @@ class ImageFinding(Exploration):
                 targetDir = Direction((t + 1) % 4)
                 while self.robot.curDir != targetDir:
                     targetAction = Helper.getTargetTurn(self.robot.curDir, targetDir)
-                    self.moveRobot(targetAction)
+                    self.moveRobot(targetAction, sense=False)
                 self.updateNeedHug()
                 break
         if startHugRow is None or startHugCol is None or startHugDir is None:
@@ -198,7 +254,7 @@ class ImageFinding(Exploration):
                 captured = False
                 while self.robot.curDir != targetDir:
                     targetAction = Helper.getTargetTurn(self.robot.curDir, targetDir)
-                    self.moveRobot(targetAction)
+                    self.moveRobot(targetAction, sense=False)
                     captured = True
                 if not captured:
                     self.captureImage()

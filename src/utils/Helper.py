@@ -139,7 +139,7 @@ class Helper:
                 exploredImages.add(imageId)
                 if simulator is not None:
                     # Draw image sticker in simulator
-                    simulator.drawImageSticker(imageId, row, col, direction)
+                    simulator.drawImageSticker(imageId, row, col, Helper.oppositeDir(direction))
 
     @staticmethod
     def processCmdAndImage(cmdType, exploredImages, simulator):
