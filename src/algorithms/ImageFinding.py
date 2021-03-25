@@ -159,7 +159,7 @@ class ImageFinding(Exploration):
             # time.sleep(0.1)
             if action == Action.MOVE_FORWARD:
                 self.forwardCnt += 1
-                if self.forwardCnt == MAX_FORWARD:
+                if self.forwardCnt == 3:
                     CommManager.sendMsg(CommandType.CALIBRATE)
                     # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
@@ -248,8 +248,9 @@ class ImageFinding(Exploration):
             firstCellToHug = self.findFirstCellToHug()
             if firstCellToHug is not None:
                 startHugRow, startHugCol, startHugDir = firstCellToHug
-                FastestPath(self.exploredMaze, self.robot, startHugRow + di[startHugDir.value] * 2,
-                            startHugCol + dj[startHugDir.value] * 2, self.realRun).runFastestPath()
+                actions = FastestPath(self.exploredMaze, self.robot, startHugRow + di[startHugDir.value] * 2,
+                                      startHugCol + dj[startHugDir.value] * 2, self.realRun).runFastestPath(execute=False)
+                self.executeFastestPath(actions)
                 targetDir = Helper.previousDir(startHugDir)
                 captured = False
                 while self.robot.curDir != targetDir:
@@ -273,3 +274,42 @@ class ImageFinding(Exploration):
             stopHugCol = startHugCol
             stopHugDir = Helper.nextDir(startHugDir)
         return stopHugRow, stopHugCol, stopHugDir
+
+    def executeFastestPath(self, actions):
+        # print("executeFastestPath")
+        if not self.realRun:
+            for action in actions:
+                self.robot.move(action, sendMsg=False)
+            return
+
+        fCount = 0
+        for i in range(len(actions)):
+            if time.time() >= self.endTime:
+                break
+            action = actions[i]
+            if action == Action.MOVE_FORWARD:
+                fCount += 1
+                if fCount == 2:
+                    obstacleAvoid = False
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+                    fCount = 0
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+            else:
+                if fCount > 0:
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid=False)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+                    fCount = 0
+                self.robot.move(action, sendMsg=True)
+                Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                time.sleep(0.05)
+
+        if fCount > 0:
+            obstacleAvoid = False
+            self.robot.moveForwardMultiple(fCount, obstacleAvoid)
+            Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+            time.sleep(0.05)

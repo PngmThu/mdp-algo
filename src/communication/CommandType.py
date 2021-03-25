@@ -25,6 +25,7 @@ class CommandType(enum.Enum):
     CALIBRATE = "R|C"
     RIGHT_CALIBRATE = "R|RC"
     FP_START_TO_ARDUINO = "R|FP_START"
+    EX_START_TO_ARDUINO = "R|EX_START"
     # To image recognition
     CAPTURE = "I|CAPTURE"
 

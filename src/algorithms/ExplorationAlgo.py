@@ -4,7 +4,7 @@ from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
 from ..static.Action import Action
 from ..static.Color import Color
-from ..static.Constants import di, dj, MAX_FORWARD
+from ..static.Constants import di, dj, MAX_FORWARD, ROW_SIZE, COL_SIZE
 from ..static.Direction import Direction
 from ..utils.Helper import Helper
 
@@ -22,6 +22,13 @@ class ExplorationAlgo:
         self.realRun = realRun
         self.forwardCnt = 0
         self.justCalibrate = False
+
+        self.records = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+        for i in range(ROW_SIZE):
+            for j in range(COL_SIZE):
+                self.records[i][j] = [0, 0, 0, 0]
+
+        self.flipRecord = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
 
     """
     Determines the next move for the robot and executes it accordingly.
@@ -61,23 +68,44 @@ class ExplorationAlgo:
             self.robot.move(action, sendMsg=self.realRun)
 
         if sense:
-            self.senseAndRepaint(exploredImages)
+            self.senseAndRepaint(exploredImages, self.flipRecord)
         elif self.realRun:
             # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
             Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
         if self.realRun:
-            # time.sleep(0.1)
+            time.sleep(0.17)
             if action == Action.MOVE_FORWARD:
                 self.forwardCnt += 1
                 if self.forwardCnt == MAX_FORWARD:
                     CommManager.sendMsg(CommandType.CALIBRATE)
-                    # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
                     Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
                     self.justCalibrate = True
                     self.forwardCnt = 0
                     time.sleep(0.05)
             else:
                 self.forwardCnt = 0
+
+            if sense and action == Action.MOVE_FORWARD:
+                self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] += 1
+                if self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] >= 2:
+                    print("Move in the loop:", self.robot.curRow, self.robot.curCol, self.robot.curDir)
+                    self.moveRobot(Action.TURN_RIGHT, sense)
+                    print("Turn right to exit loop")
+                    while not self.lookLeft():
+                        self.moveRobot(Action.TURN_RIGHT, sense)
+                        print("Turn right to exit loop")
+                    print(self.robot.curRow, self.robot.curCol, self.robot.curDir.value)
+                    # Reset self.records after exiting the loop
+                    self.records = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
+                    for i in range(ROW_SIZE):
+                        for j in range(COL_SIZE):
+                            self.records[i][j] = [0, 0, 0, 0]
+
+                    for i in range(ROW_SIZE):
+                        for j in range(COL_SIZE):
+                            print(self.records[i][j], end=" ")
+                        print()
+                    self.records[self.robot.curRow][self.robot.curCol][self.robot.curDir.value] = 0
 
     def moveRobotForwardMultiple(self, exploredImages=None):
         # numOfMoves = self.maxMoveForward()
@@ -110,7 +138,7 @@ class ExplorationAlgo:
 
     def senseAndRepaint(self, exploredImages=None, flipRecord=None):
         self.robot.updateSensorsPos()
-        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze, exploredImages, flipRecord)
+        sensorResults = self.robot.sense(self.exploredMaze, self.realMaze, exploredImages, self.flipRecord)
         sensors = [self.robot.SRFrontLeft, self.robot.SRFrontCenter, self.robot.SRFrontRight,
                    self.robot.SRLeftHead, self.robot.SRLeftTail, self.robot.LRRight]
         if self.simulator is None:

@@ -4,6 +4,7 @@ from .ExplorationAlgo import ExplorationAlgo
 from .FastestPath import FastestPath
 from ..communication.CommManager import CommManager
 from ..communication.CommandType import CommandType
+from ..static.Action import Action
 from ..static.Constants import ROW_SIZE, COL_SIZE, START_ROW, START_COL, \
     GOAL_ROW, GOAL_COL
 from ..static.Direction import Direction
@@ -67,10 +68,13 @@ class Exploration(ExplorationAlgo):
 
     def goHome(self):
         # Go to goal if never touched goal and then go back to start
+        CommManager.sendMsg(CommandType.FP_START_TO_ARDUINO)
         if not self.robot.touchedGoal and time.time() < self.endTime:
-            FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL, self.realRun).runFastestPath()
+            actions = FastestPath(self.exploredMaze, self.robot, GOAL_ROW, GOAL_COL, self.realRun).runFastestPath(execute=False)
+            self.executeFastestPath(actions)
         # Go back start
-        FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath()
+        actions = FastestPath(self.exploredMaze, self.robot, START_ROW, START_COL, self.realRun).runFastestPath(execute=False)
+        self.executeFastestPath(actions)
 
         print("Exploration complete!")
         exploredCount = self.calculateExploredCount()
@@ -87,7 +91,9 @@ class Exploration(ExplorationAlgo):
         targetRow, targetCol = res
         # actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(
         #     execute=False)
-        actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath()
+        CommManager.sendMsg(CommandType.FP_START_TO_ARDUINO)
+        actions = FastestPath(self.exploredMaze, self.robot, targetRow, targetCol, self.realRun).runFastestPath(execute=False)
+        self.executeFastestPath(actions)
         # for action in actions:
         #     if time.time() >= self.endTime:
         #         break
@@ -99,6 +105,7 @@ class Exploration(ExplorationAlgo):
         if time.time() >= self.endTime:
             return
 
+        CommManager.sendMsg(CommandType.EX_START_TO_ARDUINO)
         self.senseAndRepaint()
         # Only turn when the cell is not explored when moving
         if not self.exploredMaze[row][col].isExplored:
@@ -145,3 +152,42 @@ class Exploration(ExplorationAlgo):
                 else:
                     print("X", end=" ")
             print()
+
+    def executeFastestPath(self, actions):
+        # print("executeFastestPath")
+        if not self.realRun:
+            for action in actions:
+                self.robot.move(action, sendMsg=False)
+            return
+
+        fCount = 0
+        for i in range(len(actions)):
+            if time.time() >= self.endTime:
+                break
+            action = actions[i]
+            if action == Action.MOVE_FORWARD:
+                fCount += 1
+                if fCount == 2:
+                    obstacleAvoid = False
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+                    fCount = 0
+                    CommManager.sendMsg(CommandType.CALIBRATE)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+            else:
+                if fCount > 0:
+                    self.robot.moveForwardMultiple(fCount, obstacleAvoid=False)
+                    Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                    time.sleep(0.05)
+                    fCount = 0
+                self.robot.move(action, sendMsg=True)
+                Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+                time.sleep(0.05)
+
+        if fCount > 0:
+            obstacleAvoid = False
+            self.robot.moveForwardMultiple(fCount, obstacleAvoid)
+            Helper.waitForCommand(CommandType.ACTION_COMPLETE)
+            time.sleep(0.05)

@@ -7,3 +7,4 @@ class Cell:
         self.isObstacle = isObstacle
         self.isExplored = False
         self.canCalibrate = False
+        self.exploredMark = False

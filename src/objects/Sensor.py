@@ -51,6 +51,7 @@ class Sensor:
 
             # Explored
             exploredMaze[row][col].isExplored = True
+            exploredMaze[row][col].exploredMark = True
 
             # Explored cell is an obstacle
             if realMaze[row][col].isObstacle and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row, col):
@@ -95,11 +96,13 @@ class Sensor:
 
             # Explored
             exploredMaze[row][col].isExplored = True
+
             # exploredMaze[row][col].isObstacle = False
             # simulator.paintCell(row, col, Color.EMPTY_CELL)
 
             # Explored cell is an obstacle
             if sensorVal == dist and not Helper.inStartZone(row, col) and not Helper.inGoalZone(row, col):
+                # Only unexplored cell can be set to obstacle
                 if not exploredMaze[row][col].isObstacle:
                     flipRecord[row][col] += 1
                 if flipRecord[row][col] > 2:
@@ -111,6 +114,7 @@ class Sensor:
                     simulator.paintCell(row, col, Color.OBSTACLE)
                 break
             else:
+                # exploredMaze[row][col].isExplored = True
                 if exploredMaze[row][col].isObstacle:
                     flipRecord[row][col] += 1
                 exploredMaze[row][col].isObstacle = False

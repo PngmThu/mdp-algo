@@ -192,7 +192,7 @@ def main():
             # Start image finding in a new thread: 6 minutes
             IFThread = Thread(
                 target=lambda: ImageFinding(exploredMaze, maze, robot,
-                                            simulator, 340, 300, realRun, realImages).runImageFinding(),
+                                            simulator, 330, 300, realRun, realImages).runImageFinding(),
                 daemon=True)
             IFThread.start()
 
