@@ -73,7 +73,7 @@ class ExplorationAlgo:
             # Helper.waitForCommand(CommandType.ACTION_COMPLETE)
             Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
         if self.realRun:
-            time.sleep(0.17)
+            # time.sleep(0.17)
             if action == Action.MOVE_FORWARD:
                 self.forwardCnt += 1
                 if self.forwardCnt == MAX_FORWARD:
@@ -81,7 +81,7 @@ class ExplorationAlgo:
                     Helper.processCmdAndImage(CommandType.ACTION_COMPLETE, exploredImages, self.simulator)
                     self.justCalibrate = True
                     self.forwardCnt = 0
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
             else:
                 self.forwardCnt = 0
 

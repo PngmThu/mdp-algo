@@ -96,6 +96,7 @@ class Sensor:
 
             # Explored
             exploredMaze[row][col].isExplored = True
+            exploredMaze[row][col].exploredMark = True
 
             # exploredMaze[row][col].isObstacle = False
             # simulator.paintCell(row, col, Color.EMPTY_CELL)

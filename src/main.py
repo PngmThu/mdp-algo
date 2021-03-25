@@ -18,7 +18,7 @@ fastestPathDone = False
 
 
 def loadArena():
-    file1 = open("../arenas/arena4.txt", 'r')
+    file1 = open("../arenas/arena9.txt", 'r')
     lines = file1.readlines()
 
     arena = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
@@ -140,7 +140,7 @@ def main():
             exploredMaze = Helper.init2dArray(ROW_SIZE, COL_SIZE, 0)
             explorationInit(scoreMaze, exploredMaze)
 
-            timeLimit = 3600
+            timeLimit = 330
             coverageLimit = 300
             speed = SPEED
             if choice == 3:
@@ -239,6 +239,8 @@ def explorationInit(scoreMaze, exploredMaze):
         for dc in range(-1, 2):
             exploredMaze[START_ROW + dr][START_COL + dc].isExplored = True
             exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].isExplored = True
+            exploredMaze[START_ROW + dr][START_COL + dc].exploredMark = True
+            exploredMaze[GOAL_ROW + dr][GOAL_COL + dc].exploredMark = True
 
 
 def loadMazeFromMapDescriptorP2(hexP2):
